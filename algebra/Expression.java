@@ -6,8 +6,6 @@ import java.util.Collections;
 import utility.Pair;
 
 public abstract class Expression {
-    final public static char LEFT_ROUND_BRACKET = '(';
-    final public static char RIGHT_ROUND_BRACKET = ')';
     final private static int NUMBER_LITERAL = 1;
     final private static int OPEN_BRACKET = 2;
     final private static int CLOSE_BRACKET = 3;
@@ -223,7 +221,7 @@ public abstract class Expression {
             } else newTokens.add(tokens.get(i));
         }
         if(newTokens.size() == 1) return (Expression)newTokens.get(0);
-        ((5)((((22)/((4)))+((5)(((6)/((5)))-((3)/((2))))))^(-(5))))-((2)((5)/((9))))
+
         // Parse addition and subtraction
         tokens = newTokens;
         Sum finalExpression = new Sum();
@@ -257,5 +255,9 @@ public abstract class Expression {
         }
 
         return internalParse(newTokens, 0);
+    }
+
+    public Expression simplify() {
+        return this;
     }
 }

@@ -29,20 +29,29 @@ class Product extends Expression {
         if(factors.size() == 0) str.append('1');
         for(int i = 0; i < factors.size(); i++) {
             Expression factor = factors.get(i);
-            str.append('(');
-            str.append(factor.toString());
-            str.append(')');
+            if(i > 0) str.append('*');
+            if(factor instanceof Power || factor instanceof BigRational && ((BigRational)factor).isInteger()) {
+                str.append(factor.toString());
+            } else {
+                str.append('(');
+                str.append(factor.toString());
+                str.append(')');
+            }
         }
         if(divisors.size() > 0) {
             str.append('/');
-            str.append('(');
+            if(divisors.size() > 1) str.append('(');
             for(int i = 0; i < divisors.size(); i++) {
                 Expression divisor = divisors.get(i);
-                str.append('(');
-                str.append(divisor.toString());
-                str.append(')');
+                if(i > 0) str.append('*');
+                if(divisor instanceof BigRational && ((BigRational)divisor).isInteger()) str.append(divisor.toString());
+                else {
+                    str.append('(');
+                    str.append(divisor.toString());
+                    str.append(')');
+                }
             }
-            str.append(')');
+            if(divisors.size() > 1) str.append(')');
         }
         return str.toString();
     }

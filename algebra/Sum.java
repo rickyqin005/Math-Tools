@@ -25,11 +25,15 @@ class Sum extends Expression {
         StringBuilder str = new StringBuilder();
         for(int i = 0; i < terms.size(); i++) {
             Pair<Expression, Integer> term = terms.get(i);
-            if(term.second == -1) str.append('-');
-            else if(i != 0) str.append('+');
-            str.append('(');
-            str.append(term.first.toString());
-            str.append(')');
+            Expression expression = term.first;
+            int signum = term.second;
+            if(signum == -1) str.append('-');
+            else if(i > 0) str.append('+');
+            if(expression instanceof Sum || (expression instanceof BigRational && ((BigRational)expression).signum() == -1)) {
+                str.append('(');
+                str.append(expression.toString());
+                str.append(')');
+            } else str.append(expression.toString());
         }
         return str.toString();
     }

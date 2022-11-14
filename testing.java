@@ -1,27 +1,22 @@
 import java.util.Scanner;
 
-import algebra.BigRational;
 import algebra.Expression;
 
 public class testing {
     public static Scanner in = new Scanner(System.in);
-    public static BigRational readBigRational(String name) {
-        System.out.print("Enter a rational number " + name + " = A/B in the format \"A B\":");
-        return new BigRational(in.next(), in.next());
-    }
     public static void main(String[] args) {
         while(true) {
             try {
-                String expression = in.nextLine();
-                long startTime = System.nanoTime();
-                System.out.println("= " + Expression.parse(expression));
-                // Expression.parse(expression);
-                System.out.printf("(Took %.03f ms)\n", ((double)(System.nanoTime()-startTime))/1000000);
+                String str = in.nextLine();
+                // long startTime = System.nanoTime();
+                Expression expression = Expression.parse(str);
+                System.out.println("= " + expression);
+                // System.out.println("= " + expression.simplify());
+                System.out.println();
+                // System.out.printf("(Took %.03f ms)\n", ((double)(System.nanoTime()-startTime))/1000000);
             } catch (Exception e) {
                 System.out.println(e);
             }
         }
     }
 }
-
-// "   5*(22 /4 + 5*(6/5 - 3/2))^(-5) - 2*(5/9) "
