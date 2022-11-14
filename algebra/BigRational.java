@@ -109,12 +109,20 @@ public class BigRational extends Expression {
         return new BigRational(numerator.multiply(val.denominator), denominator.multiply(val.numerator));
     }
 
+    public boolean isInteger() {
+        return denominator.equals(BigInteger.ONE);
+    }
+
     public BigRational multiply(BigRational val) {
         return new BigRational(numerator.multiply(val.numerator), denominator.multiply(val.denominator));
     }
 
     public BigRational negate() {
         return new BigRational(numerator.negate(), denominator);
+    }
+
+    public int signum() {
+        return numerator.signum();
     }
 
     public BigRational subtract(BigRational val) {

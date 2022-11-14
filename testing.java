@@ -13,8 +13,10 @@ public class testing {
         while(true) {
             try {
                 String expression = in.nextLine();
-                System.out.println(BigRational.parseNumber(expression));
+                long startTime = System.nanoTime();
+                System.out.println("= " + Expression.parse(expression));
                 // Expression.parse(expression);
+                System.out.printf("(Took %.03f ms)\n", ((double)(System.nanoTime()-startTime))/1000000);
             } catch (Exception e) {
                 System.out.println(e);
             }
