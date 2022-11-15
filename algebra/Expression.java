@@ -14,13 +14,13 @@ public abstract class Expression {
     final private static int MULTIPLY = 6;
     final private static int DIVIDE = 7;
     final private static int CARET = 8;
+    final private static int VARIABLE = 9;
 
     private static ArrayList<Pair<String, Integer>> tokenizeExpression(String str) {
         // Remove whitespace characters
         str = str.replaceAll("\\s", "");
 
-
-        // Split the string into tokens
+        // Split string into tokens
         ArrayList<Pair<String, Integer>> tokens = new ArrayList<>();
         for(int i = 0; i < str.length();) {
             if(Character.isDigit(str.charAt(i)) || str.charAt(i) == '.') {// number literal
@@ -54,11 +54,10 @@ public abstract class Expression {
                 tokens.add(new Pair<>("/", DIVIDE)); i++;
             } else if(str.charAt(i) == '^') {
                 tokens.add(new Pair<>("^", CARET)); i++;
-            } else throw new RuntimeException("Illegal character\"" + str.charAt(i) + "\"");
+            } else if(Character.isLetter(str.charAt(i))) {// a variable
+                tokens.add(new Pair<>(Character.toString(str.charAt(i)), VARIABLE)); i++;
+            } else throw new RuntimeException("Illegal character \"" + str.charAt(i) + "\"");
         }
-        // System.out.println("First round of token parsing:");
-        // for(Pair<String, Integer> token: tokens) System.out.println(token.first + "    " + token.second);
-        // System.out.println();
 
 
         // Validate tokens
@@ -69,15 +68,18 @@ public abstract class Expression {
             switch(token.second) {
                 case NUMBER_LITERAL:
                 assert(prevToken == null || prevToken.second != NUMBER_LITERAL);
-                if(prevToken != null && prevToken.second == CLOSE_BRACKET) newTokens.add(new Pair<>("*", MULTIPLY));
+                if(prevToken != null && (// implied multiplication
+                    prevToken.second == CLOSE_BRACKET ||
+                    prevToken.second == VARIABLE)) newTokens.add(new Pair<>("*", MULTIPLY));
                 newTokens.add(token);
                 break;
 
                 case OPEN_BRACKET:
                 depth++;
-                if(prevToken != null && (prevToken.second == NUMBER_LITERAL || prevToken.second == CLOSE_BRACKET)) {
-                    newTokens.add(new Pair<>("*", MULTIPLY));
-                }
+                if(prevToken != null && (// implied multiplication
+                    prevToken.second == NUMBER_LITERAL ||
+                    prevToken.second == CLOSE_BRACKET ||
+                    prevToken.second == VARIABLE)) newTokens.add(new Pair<>("*", MULTIPLY));
                 newTokens.add(token);
                 break;
 
@@ -85,60 +87,60 @@ public abstract class Expression {
                 depth--;
                 if(depth < 0) throw new RuntimeException("Mismatched Brackets");
                 if(prevToken != null && prevToken.second == OPEN_BRACKET) throw new RuntimeException("Empty Bracket");// empty brackets
-                if(prevToken != null && !(prevToken.second == NUMBER_LITERAL || prevToken.second == CLOSE_BRACKET)) throw new RuntimeException();
+                if(prevToken != null && !(prevToken.second == NUMBER_LITERAL || prevToken.second == CLOSE_BRACKET || prevToken.second == VARIABLE)) throw new RuntimeException();
                 newTokens.add(token);
                 break;
 
                 case PLUS:
-                if(prevToken != null && (prevToken.second == NUMBER_LITERAL || prevToken.second == CLOSE_BRACKET)) newTokens.add(token);
+                if(prevToken != null && (// plus signs are sometimes unnecessary
+                    prevToken.second == NUMBER_LITERAL ||
+                    prevToken.second == CLOSE_BRACKET ||
+                    prevToken.second == VARIABLE)) newTokens.add(token);
                 break;
 
                 case MINUS:
-                if(prevToken != null && prevToken.second == PLUS) {
+                if(prevToken != null && prevToken.second == PLUS) {// +- becomes -
                     newTokens.remove(newTokens.size()-1);
-                    newTokens.add(token);
-                } else if(prevToken != null && prevToken.second == MINUS) {
+                    newTokens.add(new Pair<>("-", MINUS));
+                } else if(prevToken != null && prevToken.second == MINUS) {// -- becomes +
                     newTokens.remove(newTokens.size()-1);
                     newTokens.add(new Pair<>("+", PLUS));
                 } else newTokens.add(token);
                 break;
 
                 case MULTIPLY:
-                if(prevToken == null) throw new RuntimeException();
-                if(!(prevToken.second == NUMBER_LITERAL || prevToken.second == CLOSE_BRACKET)) throw new RuntimeException();
-                newTokens.add(token);
-                break;
-
                 case DIVIDE:
-                if(prevToken == null) throw new RuntimeException();
-                if(!(prevToken.second == NUMBER_LITERAL || prevToken.second == CLOSE_BRACKET)) throw new RuntimeException();
-                newTokens.add(token);
-                break;
-
                 case CARET:
                 if(prevToken == null) throw new RuntimeException();
-                if(!(prevToken.second == NUMBER_LITERAL || prevToken.second == CLOSE_BRACKET)) throw new RuntimeException();
+                if(!(prevToken.second == NUMBER_LITERAL || prevToken.second == CLOSE_BRACKET || prevToken.second == VARIABLE)) throw new RuntimeException();
+                newTokens.add(token);
+                break;
+
+                case VARIABLE:
+                if(prevToken != null && (// implied multiplication
+                    prevToken.second == NUMBER_LITERAL ||
+                    prevToken.second == CLOSE_BRACKET ||
+                    prevToken.second == VARIABLE)) newTokens.add(new Pair<>("*", MULTIPLY));
                 newTokens.add(token);
                 break;
             }
             if(i == tokens.size()-1) {
                 switch(newTokens.get(newTokens.size()-1).second) {// check validity of last token
                     case NUMBER_LITERAL:
-                    case CLOSE_BRACKET: break;
+                    case CLOSE_BRACKET:
+                    case VARIABLE: break;
                     case OPEN_BRACKET: throw new RuntimeException("Mismatched Brackets");
                     default: throw new RuntimeException();
                 }
                 for(int j = 0; j < depth; j++) newTokens.add(new Pair<>(")", CLOSE_BRACKET));// add closing brackets if missing
             }
         }
-        // System.out.println("Second round of token parsing:");
-        // for(Pair<String, Integer> token: newTokens) System.out.println(token.first + "    " + token.second);
-        // System.out.println();
 
         return newTokens;
     }
 
     private static Expression internalParse(ArrayList<? extends Object> tokens, int beginIndex) {
+
         // Find the range [beginIndex, endIndex) of the current expression in str
         int endIndex = beginIndex;
         for(int currDepth = 0; endIndex < tokens.size(); endIndex++) {
@@ -180,7 +182,11 @@ public abstract class Expression {
                     if(newTokens.get(newTokens.size()-1) instanceof Pair) {// negative sign
                         if(newTokens.get(newTokens.size()-2) instanceof BigRational) {
                             exponent = ((BigRational)newTokens.get(newTokens.size()-2)).negate();
-                        } else exponent = new Sum().add((Expression)newTokens.get(newTokens.size()-2), -1);
+                        } else {
+                            ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
+                            terms.add(new Pair<>((Expression)newTokens.get(newTokens.size()-2), -1));
+                            exponent = new Sum(terms);
+                        }
                         newTokens.remove(newTokens.size()-1);
                         newTokens.remove(newTokens.size()-1);
                     } else {
@@ -202,21 +208,31 @@ public abstract class Expression {
             if(tokens.get(i) instanceof Pair) {
                 Pair<String, Integer> token = (Pair<String, Integer>)tokens.get(i);
                 if(token.second == MULTIPLY || token.second == DIVIDE) {
-                    Expression multiplier = (Expression)newTokens.get(newTokens.size()-1);
-                    Expression multiplicand;
-                    if(tokens.get(i+1) instanceof Pair) {// negative sign
-                        if(tokens.get(i+2) instanceof BigRational) {
-                            multiplicand = ((BigRational)tokens.get(i+2)).negate();
-                        } else multiplicand = new Sum().add((Expression)tokens.get(i+2), -1);
-                        i++;// skip negative sign
-                    } else multiplicand = (Expression)tokens.get(i+1);
-                    Product product;
-                    if(multiplier instanceof Product) product = (Product)multiplier;
-                    else product = new Product(multiplier, 1);
-                    product.add(multiplicand, (token.second == MULTIPLY ? 1 : -1));
+                    ArrayList<Expression> factors = new ArrayList<>();
+                    ArrayList<Expression> divisors = new ArrayList<>();
+                    factors.add((Expression)newTokens.get(newTokens.size()-1));
+                    for(; i < tokens.size(); i++) {
+                        token = (Pair<String, Integer>)tokens.get(i);
+                        if(!(token.second == MULTIPLY || token.second == DIVIDE)) {
+                            i--; break;
+                        }
+                        Expression multiplicand;
+                        if(tokens.get(i+1) instanceof Pair) {// negative sign
+                            if(tokens.get(i+2) instanceof BigRational) {
+                                multiplicand = ((BigRational)tokens.get(i+2)).negate();
+                            } else {
+                                ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
+                                terms.add(new Pair<>((Expression)tokens.get(i+2), -1));
+                                multiplicand = new Sum(terms);
+                            }
+                            i++;// skip negative sign
+                        } else multiplicand = (Expression)tokens.get(i+1);
+                        if(token.second == MULTIPLY) factors.add(multiplicand);
+                        else divisors.add(multiplicand);
+                        i++;// skip multiplicand
+                    }
                     newTokens.remove(newTokens.size()-1);
-                    newTokens.add(product);
-                    i++;// skip multiplicand
+                    newTokens.add(new Product(factors, divisors));
                 } else newTokens.add(tokens.get(i));
             } else newTokens.add(tokens.get(i));
         }
@@ -224,19 +240,19 @@ public abstract class Expression {
 
         // Parse addition and subtraction
         tokens = newTokens;
-        Sum finalExpression = new Sum();
+        ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
         for(int i = 0; i < tokens.size(); i++) {
             if(tokens.get(i) instanceof Expression) {
                 Expression addend = (Expression)tokens.get(i);
                 int leadingSign = 1;
                 if(i > 0) {
-                    Pair<String, Integer> token = (Pair<String, Integer>)tokens.get(i-1);
-                    if(token.second == MINUS) leadingSign = -1;
+                    Pair<String, Integer> prevToken = (Pair<String, Integer>)tokens.get(i-1);
+                    if(prevToken.second == MINUS) leadingSign = -1;
                 }
-                finalExpression.add(addend, leadingSign);
+                terms.add(new Pair<>(addend, leadingSign));
             }
         }
-        return finalExpression;
+        return new Sum(terms);
     }
 
     protected static String surroundInBrackets(String str) {
@@ -246,18 +262,21 @@ public abstract class Expression {
     public static Expression parse(String str) {
         ArrayList<Pair<String, Integer>> tokens = tokenizeExpression(str);
 
-        // parse number literals
+        // parse literals
         ArrayList<Object> newTokens = new ArrayList<>();
         for(int i = 0; i < tokens.size(); i++) {
             Pair<String, Integer> token = tokens.get(i);
-            if(token.second == NUMBER_LITERAL) newTokens.add(BigRational.parseNumber(token.first));
-            else newTokens.add(token);
+            if(token.second == NUMBER_LITERAL) {// parse number literals
+                newTokens.add(BigRational.parseNumber(token.first));
+            } else if(token.second == VARIABLE) {// parse variables
+                newTokens.add(new Variable(token.first));
+            } else newTokens.add(token);
         }
 
         return internalParse(newTokens, 0);
     }
 
-    public Expression simplify() {
-        return this;
-    }
+    public abstract Expression evaluate();
+
+    // public abstract Expression evaluate(ArrayList<Pair<String, Expression>> variableValues);
 }

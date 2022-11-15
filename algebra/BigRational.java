@@ -1,6 +1,9 @@
 package algebra;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+
+import utility.Pair;
 
 /**
  * <p>Immutable rational numbers represented in the form {@code P / Q}, where
@@ -121,6 +124,11 @@ public class BigRational extends Expression {
         return new BigRational(numerator.negate(), denominator);
     }
 
+    public BigRational pow(int exponent) {
+        throw new RuntimeException("Not finished implementation for BigRational.pow(int exponent)");
+        // return new BigRational(numerator.pow(exponent), denominator.pow(exponent));
+    }
+
     public int signum() {
         return numerator.signum();
     }
@@ -128,4 +136,14 @@ public class BigRational extends Expression {
     public BigRational subtract(BigRational val) {
         return new BigRational((numerator.multiply(val.denominator)).subtract(denominator.multiply(val.numerator)), denominator.multiply(val.denominator));
     }
+
+    @Override
+    public Expression evaluate() {
+        return this;
+    }
+
+    // @Override
+    // public Expression evaluate(ArrayList<Pair<String, Expression>> variableValues) {
+    //     return this;
+    // }
 }

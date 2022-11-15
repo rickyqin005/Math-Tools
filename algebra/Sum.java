@@ -9,14 +9,8 @@ class Sum extends Expression {
 
     public Sum() {}
 
-    public Sum add(Expression expression) {
-        terms.add(new Pair<>(expression, 1));
-        return this;
-    }
-
-    public Sum add(Expression expression, int signum) {
-        terms.add(new Pair<>(expression, signum));
-        return this;
+    public Sum(ArrayList<Pair<Expression, Integer>> terms) {
+        this.terms.addAll(terms);
     }
 
     @Override
@@ -30,11 +24,19 @@ class Sum extends Expression {
             if(signum == -1) str.append('-');
             else if(i > 0) str.append('+');
             if(expression instanceof Sum || (expression instanceof BigRational && ((BigRational)expression).signum() == -1)) {
-                str.append('(');
-                str.append(expression.toString());
-                str.append(')');
+                str.append(surroundInBrackets(expression.toString()));
             } else str.append(expression.toString());
         }
         return str.toString();
+    }
+
+    @Override
+    public Expression evaluate() {
+        ArrayList<Pair<Expression, Integer>> newTerms = new ArrayList<>();
+        Expression ans = new BigRational(0);
+        for(Pair<Expression, Integer> term: terms) {
+            Expression result = term.first.evaluate();
+        }
+        return this;
     }
 }
