@@ -1,10 +1,19 @@
 package algebra;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import utility.Pair;
+
 public class Variable extends Expression {
     private String label;
 
     public Variable(String label) {
         this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
     }
 
     @Override
@@ -18,8 +27,9 @@ public class Variable extends Expression {
     }
 
     @Override
-    public Expression evaluate() {
-        throw new RuntimeException("Cannot evaluate a variable expression");
+    protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
+        Expression variableValue = variableValues.get(label);
+        if(variableValue == null) throw new ArithmeticException("Variable: Undefined variable value");
+        return variableValue;
     }
-
 }

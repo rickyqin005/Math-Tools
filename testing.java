@@ -9,15 +9,14 @@ public class testing {
         for(int i = 0; i < N; i++) {
             try {
                 String str = in.nextLine();
-                // long startTime = System.nanoTime();
                 Expression expression = Expression.parse(str);
                 System.out.println("= " + expression);
-                // System.out.println("= " + expression.evaluate());
-                System.out.println();
-                // System.out.printf("(Took %.03f ms)\n", ((double)(System.nanoTime()-startTime))/1000000);
+                // Expression evaluatedExpression = expression.evaluate();
+                // System.out.println("= " + evaluatedExpression);
             } catch (Exception e) {
                 System.out.println(e);
             }
+            System.out.println();
         }
     }
 }

@@ -1,5 +1,7 @@
 package algebra;
 
+import java.util.HashMap;
+
 class Power extends Expression {
 
     private Expression base;
@@ -38,9 +40,12 @@ class Power extends Expression {
     }
 
     @Override
-    public Expression evaluate() {
-        base.evaluate();
-        exponent.evaluate();
-        return this;
+    protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
+        Expression newBase = base.internalEvaluate(variableValues);
+        Expression newExponent = exponent.internalEvaluate(variableValues);
+        if(newBase instanceof BigRational && newExponent instanceof BigRational) {
+            return ((BigRational)newBase).pow((BigRational)newExponent);
+        }
+        return new Power(newBase, newExponent);
     }
 }
