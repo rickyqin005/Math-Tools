@@ -21,9 +21,9 @@ public abstract class Expression {
     final private static int VARIABLE = 9;
 
     /**
-     * Splits a String representation of an Expression into its tokens
-     * @param str The string
-     * @return An ArrayList of tokens and its token type
+     * Splits a {@code String} representation of an Expression into its tokens
+     * @param str The {@code String}
+     * @return An {@code ArrayList} of tokens and its token type
      */
     private static ArrayList<Pair<String, Integer>> tokenizeExpression(String str) {
         // Remove whitespace characters
@@ -149,7 +149,7 @@ public abstract class Expression {
     }
 
     /**
-     * Turns a list of tokens into an expression.
+     * Turns a list of tokens into an expression, following the order of operations.
      * @param tokens The tokens to parse.
      * @param beginIndex The index of the first token to parse.
      * @return The parsed Expression.
@@ -271,17 +271,17 @@ public abstract class Expression {
     }
 
     /**
-     * Surrounds the provided String with a pair of round brackets.
-     * @param str The provided string.
-     * @return The new string.
+     * Surrounds the provided {@code String} with a pair of round brackets.
+     * @param str The provided {@code String}.
+     * @return A new {@code String}.
      */
     protected static String surroundInBrackets(String str) {
         return new StringBuilder("(").append(str).append(")").toString();
     }
 
     /**
-     * Parses the String argument into a mathematical expression.
-     * @param str The String representation of the expression.
+     * Parses the {@code String} argument into a mathematical expression.
+     * @param str The {@code String} representation of the expression.
      * @return An {@code Expression} object.
      */
     public static Expression parse(String str) {
@@ -300,6 +300,24 @@ public abstract class Expression {
 
         return internalParse(newTokens, 0);
     }
+
+    /**
+     * Compares this Expression with the specified object for equality.
+     * @param o The object to which this Expression is to be compared.
+     * @return True if the object is a Expression and whose value is numerically
+     * equal to this Expression.
+     */
+    @Override
+    public abstract boolean equals(Object o);
+
+    @Override
+    public abstract int hashCode();
+
+    /**
+     * Returns a {@code String} object representing the value of this Expression.
+     */
+    @Override
+    public abstract String toString();
 
     /**
      * Attempts to compute a numerical exact value for the current expression, given values of the variables.

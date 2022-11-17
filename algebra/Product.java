@@ -2,17 +2,72 @@ package algebra;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.ListIterator;
 
-import utility.Pair;
-
+/**
+ * <p>An internal class representing a product or division of expressions.</p>
+ */
 class Product extends Expression {
+    /**
+     * A list of factors in this Product.
+     */
     private ArrayList<Expression> factors = new ArrayList<>();
+
+    /**
+     * A list of divisors in this Product.
+     */
     private ArrayList<Expression> divisors = new ArrayList<>();
 
+    /**
+     * Constructs a Product Object with the provided factors and divisors.
+     * @param factors A list of factors.
+     * @param divisors A list of divisors.
+     */
     public Product(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
         if(factors.size() + divisors.size() == 0) throw new ArithmeticException("Product: Must have at least one factor or divisor");
         this.factors.addAll(factors);
         this.divisors.addAll(divisors);
+    }
+
+    /**
+     * Compares this Product with the specified object for equality.
+     * @param o The object to which this Product is to be compared.
+     * @return True if the object is a Product and whose contents are
+     * identical to this Product.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if(o == this) return true;
+        if(!(o instanceof Product)) return false;
+
+        // compare factors
+        ListIterator<Expression> it1 = factors.listIterator();
+        ListIterator<Expression> it2 = ((Product)o).factors.listIterator();
+        while(it1.hasNext() && it2.hasNext()) {
+            Expression factor1 = it1.next();
+            Expression factor2 = it2.next();
+            if(!factor1.equals(factor2)) return false;
+        }
+        if(!(!it1.hasNext() && !it2.hasNext())) return false;
+
+        // compare divisors
+        it1 = divisors.listIterator();
+        it2 = ((Product)o).divisors.listIterator();
+        while(it1.hasNext() && it2.hasNext()) {
+            Expression divisor1 = it1.next();
+            Expression divisor2 = it2.next();
+            if(!divisor1.equals(divisor2)) return false;
+        }
+        return (!it1.hasNext() && !it2.hasNext());
+    }
+
+    /**
+     * Returns the hash code for this Product.
+     * @return The hash code for this Product.
+     */
+    @Override
+    public int hashCode() {
+        return factors.hashCode() ^ divisors.hashCode();
     }
 
     @Override
@@ -69,7 +124,7 @@ class Product extends Expression {
         for(Expression expression: newFactors1) {
             if(expression instanceof BigRational) coefficient = coefficient.multiply((BigRational)expression);
             else if(expression instanceof Variable) {
-                variableTerms.putIfAbsent(((Variable)expression).getLabel(), new Sum());
+                // variableTerms.putIfAbsent(((Variable)expression).getLabel(), new Sum());
                 // TODO
                 throw new RuntimeException("TODO");
             }

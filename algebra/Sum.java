@@ -1,17 +1,57 @@
 package algebra;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.ListIterator;
 
 import utility.Pair;
 
+/**
+ * <p>An internal class representing a sum of expressions.</p>
+ */
 class Sum extends Expression {
+    /**
+     * The list of terms in this Sum along with their leading sign:
+     * 1 or -1 if the leading sign is positive or negative.
+     */
     private ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
 
+    /**
+     * Constructs a Sum object with the provided terms and their sign.
+     * @param terms The terms.
+     */
     public Sum(ArrayList<Pair<Expression, Integer>> terms) {
         this.terms.addAll(terms);
+    }
+
+    /**
+     * Compares this Sum with the specified object for equality.
+     * @param o The object to which this Sum is to be compared.
+     * @return True if the object is a Sum and whose contents are identical
+     * to this Sum.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if(o == this) return true;
+        if(!(o instanceof Sum)) return false;
+        ListIterator<Pair<Expression, Integer>> it1 = terms.listIterator();
+        ListIterator<Pair<Expression, Integer>> it2 = ((Sum)o).terms.listIterator();
+        while(it1.hasNext() && it2.hasNext()) {
+            Pair<Expression, Integer> term1 = it1.next();
+            Pair<Expression, Integer> term2 = it2.next();
+            if(term1.second() != term2.second()) return false;
+            if(!term1.first().equals(term2.first())) return false;
+        }
+        return (!it1.hasNext() && !it2.hasNext());
+    }
+
+    /**
+     * Returns the hash code for this Sum.
+     * @return The hash code for this Sum.
+     */
+    @Override
+    public int hashCode() {
+        return terms.hashCode();
     }
 
     @Override
@@ -29,16 +69,6 @@ class Sum extends Expression {
             } else str.append(expression.toString());
         }
         return str.toString();
-    }
-
-    protected Sum add(Sum other, int signum) {
-        signum = (signum >= 0 ? 1 : -1);
-        ArrayList<Pair<Expression, Integer>> newTerms = new ArrayList<>();
-        Collections.copy(newTerms, terms);
-        for(Pair<Expression, Integer> otherTerm: other.terms) {
-            newTerms.add(new Pair<>(otherTerm.first(), signum*otherTerm.second()));
-        }
-        return new Sum(newTerms);
     }
 
     @Override

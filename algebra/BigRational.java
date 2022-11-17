@@ -111,19 +111,26 @@ public class BigRational extends Expression {
     }
 
     /**
-     * Modifies the numerator and denominator such that they are in lowest terms and
-     * that the denominator is positive.
-     * The value represented by the BigRational does not change.
+     * Compares this BigRational with the specified object for equality.
+     * @param o The object to which this BigInteger is to be compared.
+     * @return True if the object is a BigRational and whose value is numerically
+     * equal to this BigRational.
      */
-    private void normalize() {
-        if(denominator.signum() == -1) {
-            numerator = numerator.negate();
-            denominator = denominator.negate();
-        }
-        if(denominator.equals(BigInteger.ZERO)) throw divisionByZeroError();
-        BigInteger gcd = numerator.gcd(denominator);
-        numerator = numerator.divide(gcd);
-        denominator = denominator.divide(gcd);
+    @Override
+    public boolean equals(Object o) {
+        if(o == this) return true;
+        if(!(o instanceof BigRational)) return false;
+        return (numerator.equals(((BigRational)o).numerator) &&
+            denominator.equals(((BigRational)o).denominator));
+    }
+
+    /**
+     * Returns the hash code for this BigRational.
+     * @return The hash code for this BigRational.
+     */
+    @Override
+    public int hashCode() {
+        return numerator.hashCode() ^ denominator.hashCode();
     }
 
     /**
@@ -136,17 +143,25 @@ public class BigRational extends Expression {
         return numerator.toString() + "/" + denominator.toString();
     }
 
-    /**
-     * Compares this BigRational with the specified object for equality.
-     * @param o The object to which this BigInteger is to be compared.
-     * @return True if the object is a BigRational and whose value is numerically
-     * equal to this BigRational
-     */
     @Override
-    public boolean equals(Object o) {
-        if(o instanceof BigRational) return (((BigRational)o).numerator.equals(numerator) &&
-            ((BigRational)o).denominator.equals(denominator));
-        return false;
+    protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
+        return this;
+    }
+
+    /**
+     * Modifies the numerator and denominator such that they are in lowest terms and
+     * that the denominator is strictly positive.
+     * Note: the value represented by the BigRational does not change.
+     */
+    private void normalize() {
+        if(denominator.signum() == -1) {
+            numerator = numerator.negate();
+            denominator = denominator.negate();
+        }
+        if(denominator.equals(BigInteger.ZERO)) throw divisionByZeroError();
+        BigInteger gcd = numerator.gcd(denominator);
+        numerator = numerator.divide(gcd);
+        denominator = denominator.divide(gcd);
     }
 
     /**
@@ -171,7 +186,7 @@ public class BigRational extends Expression {
     /**
      * Returns a BigRational whose value is {@code (this / val)}.
      *
-     * @param  val value by which this BigRational is to be divided.
+     * @param  val The value by which this BigRational is to be divided.
      * @return {@code this / val}
      * @throws ArithmeticException if {@code val} is zero.
      */
@@ -181,7 +196,7 @@ public class BigRational extends Expression {
 
     /**
      * Determines whether or not this BigRational is an integer.
-     * @return Whether or not this BigRational is an integer.
+     * @return True if this BigRational is an integer.
      */
     public boolean isInteger() {
         return denominator.equals(BigInteger.ONE);
@@ -190,7 +205,7 @@ public class BigRational extends Expression {
     /**
      * Returns a BigRational whose value is {@code (this * val)}.
      *
-     * @param  val value to be multiplied by this BigRational.
+     * @param  val The value to be multiplied by this BigRational.
      * @return {@code this * val}
      */
     public BigRational multiply(BigRational val) {
@@ -248,15 +263,10 @@ public class BigRational extends Expression {
     /**
      * Returns a BigRational whose value is {@code (this - val)}.
      *
-     * @param  val value to be subtracted from this BigRational.
+     * @param  val The value to be subtracted from this BigRational.
      * @return {@code this - val}
      */
     public BigRational subtract(BigRational val) {
         return new BigRational((numerator.multiply(val.denominator)).subtract(denominator.multiply(val.numerator)), denominator.multiply(val.denominator));
-    }
-
-    @Override
-    protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
-        return this;
     }
 }

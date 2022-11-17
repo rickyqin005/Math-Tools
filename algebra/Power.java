@@ -2,14 +2,50 @@ package algebra;
 
 import java.util.HashMap;
 
+/**
+ * <p>An internal class representing a Power.</p>
+ */
 class Power extends Expression {
-
+    /**
+     * The base of this Power.
+     */
     private Expression base;
+
+    /**
+     * The exponent of this Power.
+     */
     private Expression exponent;
 
+    /**
+     * Constructs a Power object with the provided base and exponent.
+     * @param base The base.
+     * @param exponent The exponent.
+     */
     public Power(Expression base, Expression exponent) {
         this.base = base;
         this.exponent = exponent;
+    }
+
+    /**
+     * Compares this Power with the specified object for equality.
+     * @param o The object to which this Power is to be compared.
+     * @return True if the object is a Power and whose base and exponent
+     * is equal to this Power.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if(o == this) return true;
+        if(!(o instanceof Power)) return false;
+        return (base.equals(((Power)o).base) && exponent.equals(((Power)o).exponent));
+    }
+
+    /**
+     * Returns the hash code for this Power.
+     * @return The hash code for this Power.
+     */
+    @Override
+    public int hashCode() {
+        return base.hashCode() ^ exponent.hashCode();
     }
 
     @Override
