@@ -16,6 +16,9 @@ import java.util.HashMap;
  * the denominator of the result is equal to {@code 0}.</p>
  */
 public class BigRational extends Expression {
+
+// <------------------------------- Static Variables ------------------------------->
+
     /**
      * The BigRational constant one.
      */
@@ -40,6 +43,8 @@ public class BigRational extends Expression {
      * The BigRational constant negative one.
      */
     final public static BigRational NEGATIVE_ONE = new BigRational(-1);
+
+// <-------------------------------- Static Methods -------------------------------->
 
     /**
      * Parses the provided string argument as a BigRational.
@@ -80,6 +85,8 @@ public class BigRational extends Expression {
         return new ArithmeticException("BigRational: Division by zero");
     }
 
+// <------------------------------ Instance Variables ------------------------------>
+
     /**
      * The numerator of this BigRational.
      */
@@ -89,6 +96,8 @@ public class BigRational extends Expression {
      * The denominator of this BigRational.
      */
     private BigInteger denominator;
+
+// <--------------------------------- Constructors --------------------------------->
 
     /**
      * Constructs a BigRational with the specified integer value.
@@ -109,6 +118,8 @@ public class BigRational extends Expression {
         this.denominator = denominator;
         this.normalize();
     }
+
+// <-------------------- Methods Overriden from java.lang.Object -------------------->
 
     /**
      * Compares this BigRational with the specified object for equality.
@@ -143,10 +154,104 @@ public class BigRational extends Expression {
         return numerator.toString() + "/" + denominator.toString();
     }
 
+// <---------------------- Methods Overriden from super types ---------------------->
+
+    /**
+     * Returns an Expression whose value is {@code (this + expression)}.
+     *
+     * @param expression The expression to be added to this BigRational.
+     * @return {@code this + expression} An expression or a BigRational if
+     * {@code expression} is a BigRational.
+     */
+    @Override
+    public Expression add(Expression expression) {
+        if(!(expression instanceof BigRational)) return super.add(expression);
+        BigRational val = (BigRational)expression;
+        return new BigRational((numerator.multiply(val.denominator)).add(denominator.multiply(val.numerator)),
+            denominator.multiply(val.denominator));
+    }
+
+    /**
+     * Returns a BigRational whose value is {@code (this / val)}.
+     *
+     * @param  val The value by which this BigRational is to be divided.
+     * @return {@code this / val}
+     * @throws ArithmeticException if {@code val} is zero.
+     */
+    @Override
+    public Expression divide(Expression expression) {
+        if(!(expression instanceof BigRational)) return super.divide(expression);
+        BigRational val = (BigRational)expression;
+        return new BigRational(numerator.multiply(val.denominator), denominator.multiply(val.numerator));
+    }
+
+    /**
+     * Returns a BigRational whose value is {@code (this * val)}.
+     *
+     * @param  val The value to be multiplied by this BigRational.
+     * @return {@code this * val}
+     */
+    @Override
+    public Expression multiply(Expression expression) {
+        if(!(expression instanceof BigRational)) return super.multiply(expression);
+        BigRational val = (BigRational)expression;
+        return new BigRational(numerator.multiply(val.numerator), denominator.multiply(val.denominator));
+    }
+
+    /**
+     * Computes the value of {@code this ^ expression}.
+     *
+     * @param expression The exponent to which this BigRational is to be raised.
+     * @return Either a {@code BigRational} with the final result or a
+     * {@code Power} object if {@code expression} is not an integer.
+     * @throws {@code ArithmeticException} if the exponent is outside the range of an int.
+     */
+    @Override
+    public Expression pow(Expression expression) {
+        if(!(expression instanceof BigRational)) return super.pow(expression);
+        BigRational exponent = (BigRational)expression;
+        if(equals(ONE)) return ONE;
+        if(equals(ZERO)) {
+            if(exponent.signum() == 1) return ZERO;
+            else if(exponent.signum() == 0) throw new ArithmeticException("BigRational: Zero raised to the zeroth power");
+            else if(exponent.signum() == -1) throw new ArithmeticException("BigRational: Zero raised to a negative power");
+        }
+        if(exponent.equals(ZERO)) return ONE;
+        if(exponent.isInteger()) {
+            if(exponent.signum() == -1) return reciprocal().pow(exponent.negate());
+            int exponentInt = exponent.numerator.intValueExact();
+            return new BigRational(numerator.pow(exponentInt), denominator.pow(exponentInt));
+        }
+        return new Power(this, exponent);
+    }
+
+    /**
+     * Returns an Expression whose value is {@code (this - expression)}.
+     *
+     * @param expression The expression to be subtracted from this BigRational.
+     * @return {@code this - expression} An expression or a BigRational if
+     * {@code expression} is a BigRational.
+     */
+    @Override
+    public Expression subtract(Expression expression) {
+        if(!(expression instanceof BigRational)) return super.subtract(expression);
+        BigRational val = (BigRational)expression;
+        return new BigRational((numerator.multiply(val.denominator)).subtract(denominator.multiply(val.numerator)),
+            denominator.multiply(val.denominator));
+    }
+
+
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
         return this;
     }
+
+    @Override
+    public Expression simplify() {
+        return this;// already in lowest terms
+    }
+
+// <---------------------------------- Own Methods ---------------------------------->
 
     /**
      * Modifies the numerator and denominator such that they are in lowest terms and
@@ -174,42 +279,11 @@ public class BigRational extends Expression {
     }
 
     /**
-     * Returns a BigRational whose value is {@code (this + val)}.
-     *
-     * @param  val The value to be added to this BigRational.
-     * @return {@code this + val}
-     */
-    public BigRational add(BigRational val) {
-        return new BigRational((numerator.multiply(val.denominator)).add(denominator.multiply(val.numerator)), denominator.multiply(val.denominator));
-    }
-
-    /**
-     * Returns a BigRational whose value is {@code (this / val)}.
-     *
-     * @param  val The value by which this BigRational is to be divided.
-     * @return {@code this / val}
-     * @throws ArithmeticException if {@code val} is zero.
-     */
-    public BigRational divide(BigRational val) {
-        return new BigRational(numerator.multiply(val.denominator), denominator.multiply(val.numerator));
-    }
-
-    /**
      * Determines whether or not this BigRational is an integer.
      * @return True if this BigRational is an integer.
      */
     public boolean isInteger() {
         return denominator.equals(BigInteger.ONE);
-    }
-
-    /**
-     * Returns a BigRational whose value is {@code (this * val)}.
-     *
-     * @param  val The value to be multiplied by this BigRational.
-     * @return {@code this * val}
-     */
-    public BigRational multiply(BigRational val) {
-        return new BigRational(numerator.multiply(val.numerator), denominator.multiply(val.denominator));
     }
 
     /**
@@ -219,29 +293,6 @@ public class BigRational extends Expression {
      */
     public BigRational negate() {
         return new BigRational(numerator.negate(), denominator);
-    }
-
-    /**
-     * Computes the value of {@code this^exponent}.
-     *
-     * @param exponent The exponent to which this BigRational is to be raised.
-     * @return Either a {@code BigRational} with the final result or a {@code Power} object if {@code exponent} is not an integer.
-     * @throws {@code ArithmeticException}
-     */
-    public Expression pow(BigRational exponent) {
-        if(equals(ONE)) return ONE;
-        if(equals(ZERO)) {
-            if(exponent.signum() == 1) return ZERO;
-            else if(exponent.signum() == 0) throw new ArithmeticException("BigRational: Zero raised to the zeroth power");
-            else if(exponent.signum() == -1) throw new ArithmeticException("BigRational: Zero raised to a negative power");
-        }
-        if(exponent.equals(ZERO)) return ONE;
-        if(exponent.isInteger()) {
-            if(exponent.signum() == -1) return reciprocal().pow(exponent.negate());
-            int exponentInt = exponent.numerator.intValueExact();
-            return new BigRational(numerator.pow(exponentInt), denominator.pow(exponentInt));
-        }
-        return new Power(this, exponent);
     }
 
     /**
@@ -258,15 +309,5 @@ public class BigRational extends Expression {
      */
     public int signum() {
         return numerator.signum();
-    }
-
-    /**
-     * Returns a BigRational whose value is {@code (this - val)}.
-     *
-     * @param  val The value to be subtracted from this BigRational.
-     * @return {@code this - val}
-     */
-    public BigRational subtract(BigRational val) {
-        return new BigRational((numerator.multiply(val.denominator)).subtract(denominator.multiply(val.numerator)), denominator.multiply(val.denominator));
     }
 }

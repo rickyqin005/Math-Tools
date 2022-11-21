@@ -8,11 +8,16 @@ import utility.Pair;
 /**
  * <p>An object representing a variable.</p>
  */
-public class Variable extends Expression {
+public class Variable extends Expression implements Comparable<Variable> {
+
+// <------------------------------ Instance Variables ------------------------------>
+
     /**
      * The name of this Variable.
      */
     private String name;
+
+// <--------------------------------- Constructors --------------------------------->
 
     /**
      * Constructs a Variable object with the provided name.
@@ -21,6 +26,8 @@ public class Variable extends Expression {
     public Variable(String name) {
         this.name = name;
     }
+
+// <-------------------- Methods Overriden from java.lang.Object -------------------->
 
     /**
      * Compares this Variable with the specified object for equality.
@@ -49,12 +56,32 @@ public class Variable extends Expression {
         return name;
     }
 
+// <---------------------- Methods Implemented for Interfaces ---------------------->
+
+    /**
+     * Compares two Variables based on the ordering of their names.
+     * @param o Another Variable.
+     */
+    @Override
+    public int compareTo(Variable o) {
+        return name.compareTo(o.name);
+    }
+
+// <---------------------- Methods Overriden from super types ---------------------->
+
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
         Expression variableValue = variableValues.get(name);
         if(variableValue == null) throw new ArithmeticException("Variable: Undefined variable value");
         return variableValue;
     }
+
+    @Override
+    public Expression simplify() {
+        return this;
+    }
+
+// <---------------------------------- Own Methods ---------------------------------->
 
     /**
      * Gets the name of this Variable.

@@ -11,8 +11,8 @@ public class testing {
                 String str = in.nextLine();
                 Expression expression = Expression.parse(str);
                 System.out.println("= " + expression);
-                // Expression evaluatedExpression = expression.evaluate();
-                // System.out.println("= " + evaluatedExpression);
+                Expression simplifiedExpression = expression.simplify();
+                System.out.println("= " + simplifiedExpression);
             } catch (Exception e) {
                 System.out.println(e);
             }

@@ -7,9 +7,12 @@ import java.util.HashMap;
 import utility.Pair;
 
 /**
- * <p>An immutable object representing mathematical expressions.</p>
+ * <p>The base class for immutable objects representing mathematical expressions.</p>
  */
 public abstract class Expression {
+
+// <------------------------------- Static Variables ------------------------------->
+
     final private static int NUMBER_LITERAL = 1;
     final private static int OPEN_BRACKET = 2;
     final private static int CLOSE_BRACKET = 3;
@@ -17,8 +20,10 @@ public abstract class Expression {
     final private static int MINUS = 5;
     final private static int MULTIPLY = 6;
     final private static int DIVIDE = 7;
-    final private static int CARET = 8;
+    final private static int CARET = 8;// exponentiation
     final private static int VARIABLE = 9;
+
+// <-------------------------------- Static Methods -------------------------------->
 
     /**
      * Splits a {@code String} representation of an Expression into its tokens
@@ -301,6 +306,8 @@ public abstract class Expression {
         return internalParse(newTokens, 0);
     }
 
+// <-------------------- Methods Overriden from java.lang.Object -------------------->
+
     /**
      * Compares this Expression with the specified object for equality.
      * @param o The object to which this Expression is to be compared.
@@ -319,13 +326,72 @@ public abstract class Expression {
     @Override
     public abstract String toString();
 
+// <---------------------------------- Own Methods ---------------------------------->
+
     /**
-     * Attempts to compute a numerical exact value for the current expression, given values of the variables.
-     * @param variableValues The values to substitute into the variables.
-     * @return The result of evaluating the expression.
-     * @throws ArithmeticException If the value of a variable in the expression is not provided.
+     * Returns an Expression whose value is {@code (this + expression)}.
+     *
+     * @param  expression The value to be added to this Expression.
+     * @return {@code this + expression}
      */
-    protected abstract Expression internalEvaluate(HashMap<String, Expression> variableValues);
+    public Expression add(Expression expression) {
+        ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
+        terms.add(new Pair<>(this, 1));
+        terms.add(new Pair<>(expression, 1));
+        return new Sum(terms);
+    }
+
+    /**
+     * Returns an Expression whose value is {@code (this / expression)}.
+     *
+     * @param  expression The value by which this Expression is to be divided.
+     * @return {@code this / expression}
+     * @throws ArithmeticException if {@code expression} simplifies to zero.
+     */
+    public Expression divide(Expression expression) {
+        ArrayList<Expression> factors = new ArrayList<>();
+        ArrayList<Expression> divisors = new ArrayList<>();
+        factors.add(this);
+        divisors.add(expression);
+        return new Product(factors, divisors);
+    }
+
+    /**
+     * Returns an Expression whose value is {@code (this * expression)}.
+     *
+     * @param  expression The value to be multiplied by this Expression.
+     * @return {@code this * expression}
+     */
+    public Expression multiply(Expression expression) {
+        ArrayList<Expression> factors = new ArrayList<>();
+        factors.add(this);
+        factors.add(expression);
+        return new Product(factors, new ArrayList<>());
+    }
+
+    /**
+     * Computes the value of {@code this ^ expression}.
+     *
+     * @param expression The exponent to which this Expression is to be raised.
+     * @return {@code this ^ expression}
+     */
+    public Expression pow(Expression expression) {
+        return new Power(this, expression);
+    }
+
+    /**
+     * Returns an Expression whose value is {@code (this - expression)}.
+     *
+     * @param expression The value to be subtracted from this Expression.
+     * @return {@code this - expression}
+     */
+    public Expression subtract(Expression expression) {
+        ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
+        terms.add(new Pair<>(this, 1));
+        terms.add(new Pair<>(expression, -1));
+        return new Sum(terms);
+    }
+
 
     /**
      * Attempts to compute a numerical exact value for the current expression.
@@ -337,7 +403,7 @@ public abstract class Expression {
     }
 
     /**
-     * Attempts to compute a numerical exact value for the current expression, given values of the variables.
+     * Attempts to compute a numerical exact value for this Expression, given values of the variables.
      * @param variableValues The values to substitute into the variables.
      * @return The result of evaluating the expression.
      * @throws ArithmeticException If the value of a variable in the expression is not provided.
@@ -349,4 +415,18 @@ public abstract class Expression {
         }
         return internalEvaluate(variables);
     }
+
+    /**
+     * Attempts to compute a numerical exact value for the current expression, given values of the variables.
+     * @param variableValues The values to substitute into the variables.
+     * @return The result of evaluating the expression.
+     * @throws ArithmeticException If the value of a variable in the expression is not provided.
+     */
+    protected abstract Expression internalEvaluate(HashMap<String, Expression> variableValues);
+
+    /**
+     * Attempts to reduce the complexity of this Expression by manipulating it algebraically.
+     * @return A simplified expression that is equivalent to this Expression.
+     */
+    public abstract Expression simplify();
 }
