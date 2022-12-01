@@ -10,6 +10,24 @@ import java.util.Map;
  */
 class Power extends Expression {
 
+// <-------------------------------- Static Methods -------------------------------->
+
+    /**
+     * Attempts to form a Power Object using the provided base and exponent.
+     * @param base The base.
+     * @param exponent The exponent.
+     * @return A BigRational object if the power can be directly evaluated into a BigRational with
+     * neither the numerator or denominator exceeding {@code POWER_EVALUATION_THRESHOLD}. Otherwise,
+     * a Power object is returned.
+     * Calling this method is favoured over directly calling the constructor because it checks for
+     * trivial cases, in which case a simplier expression can be returned.
+     */
+    public static Expression parsePower(Expression base, Expression exponent) {
+        if(base instanceof BigRational && exponent instanceof BigRational) {
+            return ((BigRational)base).pow(exponent);
+        } else return new Power(base, exponent);
+    }
+
 // <------------------------------ Instance Variables ------------------------------>
 
     /**
@@ -28,8 +46,9 @@ class Power extends Expression {
      * Constructs a Power object with the provided base and exponent.
      * @param base The base.
      * @param exponent The exponent.
+     * Note: this constructor is package private.
      */
-    public Power(Expression base, Expression exponent) {
+    Power(Expression base, Expression exponent) {
         this.base = base;
         this.exponent = exponent;
     }
@@ -107,9 +126,9 @@ class Power extends Expression {
                 Map.Entry<Expression, Expression> newBaseTerm = newBaseIterator.next();
                 newBaseFactors.add(new Power(newBaseTerm.getKey(), (newBaseTerm.getValue().multiply(newExponent)).simplify()));
             }
-            return new Product(newBaseFactors, new ArrayList<>());
+            return Product.parseProduct(newBaseFactors, new ArrayList<>());
 
-        } else if(newBase instanceof Power) {// Exponent Law: (a^x)^y = a^(x*y)
+        } else if(newBase instanceof Power) {// Exponent Law: (b^x)^y = b^(x*y)
             return new Power(((Power)newBase).base, ((Power)newBase).exponent.multiply(newExponent).simplify());
 
         }

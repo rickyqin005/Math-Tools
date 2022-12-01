@@ -1,12 +1,9 @@
 package algebra;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
-import utility.Pair;
-
 /**
- * <p>An object representing a variable.</p>
+ * <p>A class representing variables.</p>
  */
 public class Variable extends Expression implements Comparable<Variable> {
 

@@ -44,11 +44,16 @@ public class BigRational extends Expression {
      */
     final public static BigRational NEGATIVE_ONE = new BigRational(-1);
 
+    /**
+     * The largest BigInteger that is allowed in a numerator or denominator after a {@code pow} operation.
+     */
+    final private static BigInteger POWER_EVALUATION_THRESHOLD = new BigInteger("1000");
+
 // <-------------------------------- Static Methods -------------------------------->
 
     /**
      * Parses the provided string argument as a BigRational.
-     * The separator between the numerator and denominator is the {@code '/'} character.
+     * The separator between the numerator and denominator must be the {@code '/'} character.
      * Both the numerator and denominator can be either an integer or a decimal number.
      * @param str The {@code String} to be parsed.
      * @return The BigRational represented by the string argument.
@@ -105,7 +110,7 @@ public class BigRational extends Expression {
      */
     public BigRational(int numerator) {
         this.numerator = new BigInteger(Integer.toString(numerator));
-        this.denominator = new BigInteger("1");
+        this.denominator = BigInteger.ONE;
     }
 
     /**
@@ -165,10 +170,11 @@ public class BigRational extends Expression {
      */
     @Override
     public Expression add(Expression expression) {
-        if(!(expression instanceof BigRational)) return super.add(expression);
+        if(!(expression instanceof BigRational)) return expression.add(this);
         BigRational val = (BigRational)expression;
         return new BigRational((numerator.multiply(val.denominator)).add(denominator.multiply(val.numerator)),
             denominator.multiply(val.denominator));
+        // a/b + c/d = ad/bd + bc/bd = (ad + bc)/bd
     }
 
     /**
@@ -180,9 +186,10 @@ public class BigRational extends Expression {
      */
     @Override
     public Expression divide(Expression expression) {
-        if(!(expression instanceof BigRational)) return super.divide(expression);
+        if(!(expression instanceof BigRational)) return expression.reciprocal().multiply(this);
         BigRational val = (BigRational)expression;
         return new BigRational(numerator.multiply(val.denominator), denominator.multiply(val.numerator));
+        // (a/b) / (c/d) = a/b * d/c = ad/bc
     }
 
     /**
@@ -193,18 +200,20 @@ public class BigRational extends Expression {
      */
     @Override
     public Expression multiply(Expression expression) {
-        if(!(expression instanceof BigRational)) return super.multiply(expression);
+        if(!(expression instanceof BigRational)) return expression.multiply(this);
         BigRational val = (BigRational)expression;
         return new BigRational(numerator.multiply(val.numerator), denominator.multiply(val.denominator));
+        // a/b * c/d = ac/bd
     }
 
     /**
      * Computes the value of {@code this ^ expression}.
      *
      * @param expression The exponent to which this BigRational is to be raised.
-     * @return Either a {@code BigRational} with the final result or a
-     * {@code Power} object if {@code expression} is not an integer.
-     * @throws {@code ArithmeticException} if the exponent is outside the range of an int.
+     * @return Either a {@code BigRational} with the final result or a {@code Power} object.
+     * Precisely, a BigRational is returned if the numerator and denominator of the result does not exceed
+     * {@code POWER_EVALUATION_THRESHOLD} and the exponent is less than or equal to {@code 10}.
+     * Otherwise, a Power object is returned representing the operation.
      */
     @Override
     public Expression pow(Expression expression) {
@@ -219,10 +228,31 @@ public class BigRational extends Expression {
         if(exponent.equals(ZERO)) return ONE;
         if(exponent.isInteger()) {
             if(exponent.signum() == -1) return reciprocal().pow(exponent.negate());
-            int exponentInt = exponent.numerator.intValueExact();
-            return new BigRational(numerator.pow(exponentInt), denominator.pow(exponentInt));
+            try {
+                int exponentInt = exponent.numerator.intValueExact();
+                if(exponentInt <= 10) {
+                    BigInteger numeratorPow = numerator.pow(exponentInt);
+                    BigInteger denominatorPow = denominator.pow(exponentInt);
+                    if(numeratorPow.compareTo(POWER_EVALUATION_THRESHOLD) <= 0 &&
+                        denominatorPow.compareTo(POWER_EVALUATION_THRESHOLD) <= 0) {
+                            return new BigRational(numeratorPow, denominatorPow);
+                    }
+                    return new Power(this, exponent);
+                } return new Power(this, exponent);
+            } catch(ArithmeticException e) {// exponent is too big for an int
+                return new Power(this, exponent);
+            }
         }
         return new Power(this, exponent);
+    }
+
+    /**
+     * Returns a BigRational whose value is {@code (1 / this)}.
+     * @return {@code 1 / this}.
+     */
+    @Override
+    public BigRational reciprocal() {
+        return new BigRational(denominator, numerator);
     }
 
     /**
@@ -234,10 +264,11 @@ public class BigRational extends Expression {
      */
     @Override
     public Expression subtract(Expression expression) {
-        if(!(expression instanceof BigRational)) return super.subtract(expression);
+        if(!(expression instanceof BigRational)) expression.subtract(this);
         BigRational val = (BigRational)expression;
         return new BigRational((numerator.multiply(val.denominator)).subtract(denominator.multiply(val.numerator)),
             denominator.multiply(val.denominator));
+        // a/b - c/d = ad/bd - bc/bd = (ad - bc)/bd
     }
 
 
@@ -293,14 +324,6 @@ public class BigRational extends Expression {
      */
     public BigRational negate() {
         return new BigRational(numerator.negate(), denominator);
-    }
-
-    /**
-     * Returns a BigRational whose value is {@code (1 / this)}
-     * @return {@code 1 / this}
-     */
-    public BigRational reciprocal() {
-        return new BigRational(denominator, numerator);
     }
 
     /**

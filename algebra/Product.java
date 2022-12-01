@@ -19,6 +19,46 @@ import java.util.TreeMap;
  */
 class Product extends Expression implements Iterable<Map.Entry<Expression, Expression>> {
 
+// <-------------------------------- Static Methods -------------------------------->
+
+    /**
+     * Attempts to form a Product Object using the provided terms.
+     * @param terms The terms.
+     * @return A Product object if there is more than one non-rational term. Otherwise, a
+     * BigRational is returned.
+     * Since the references to the lists are not stored internally, they can be mutated without
+     * affecting this object instance.
+     */
+    public static Expression parseProduct(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
+        Product res = new Product();
+        for(Expression factor: factors) {
+            if(factor instanceof BigRational) {
+                res.coefficient = (BigRational)res.coefficient.multiply((BigRational)factor);
+            } else if(factor instanceof Power) {// Exponent Law: b^x * b^y = b^(x+y)
+                Power power = (Power)factor;
+                res.terms.putIfAbsent(power.getBase(), BigRational.ZERO);
+                res.terms.replace(power.getBase(), res.terms.get(power.getBase()).add(power.getExponent()));
+            } else {
+                res.terms.putIfAbsent(factor, BigRational.ZERO);
+                res.terms.replace(factor, res.terms.get(factor).add(BigRational.ONE));
+            }
+        }
+        for(Expression divisor: divisors) {
+            if(divisor instanceof BigRational) res.coefficient = (BigRational)res.coefficient.divide((BigRational)divisor);
+            else if(divisor instanceof Power) {// Exponent Law: b^x / b^y = b^(x-y)
+                Power power = (Power)divisor;
+                res.terms.putIfAbsent(power.getBase(), BigRational.ZERO);
+                res.terms.replace(power.getBase(), res.terms.get(power.getBase()).subtract(power.getExponent()));
+            } else {
+                res.terms.putIfAbsent(divisor, BigRational.ZERO);
+                res.terms.replace(divisor, res.terms.get(divisor).subtract(BigRational.ONE));
+            }
+        }
+
+        if(res.terms.size() == 0) return res.coefficient;
+        else return res;
+    }
+
 // <------------------------------ Instance Variables ------------------------------>
 
     /**
@@ -35,38 +75,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
 // <--------------------------------- Constructors --------------------------------->
 
-    /**
-     * Constructs a Product Object with the provided factors and divisors.
-     * @param factors A list of factors.
-     * @param divisors A list of divisors.
-     * Since the references to the lists are not stored internally, they can be mutated without
-     * affecting this object instance.
-     */
-    public Product(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
-        for(Expression factor: factors) {
-            if(factor instanceof BigRational) {
-                coefficient = (BigRational)coefficient.multiply((BigRational)factor);
-            } else if(factor instanceof Power) {// Exponent Law: b^x * b^y = b^(x+y)
-                Power power = (Power)factor;
-                terms.putIfAbsent(power.getBase(), BigRational.ZERO);
-                terms.replace(power.getBase(), terms.get(power.getBase()).add(power.getExponent()));
-            } else {
-                terms.putIfAbsent(factor, BigRational.ZERO);
-                terms.replace(factor, terms.get(factor).add(BigRational.ONE));
-            }
-        }
-        for(Expression divisor: divisors) {
-            if(divisor instanceof BigRational) coefficient = (BigRational)coefficient.divide((BigRational)divisor);
-            else if(divisor instanceof Power) {// Exponent Law: b^x / b^y = b^(x-y)
-                Power power = (Power)divisor;
-                terms.putIfAbsent(power.getBase(), BigRational.ZERO);
-                terms.replace(power.getBase(), terms.get(power.getBase()).subtract(power.getExponent()));
-            } else {
-                terms.putIfAbsent(divisor, BigRational.ZERO);
-                terms.replace(divisor, terms.get(divisor).subtract(BigRational.ONE));
-            }
-        }
-    }
+    private Product() {}
 
     /**
      * Constructs a Product Object with the provided coefficient and terms.
@@ -74,6 +83,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
      * @param terms The terms, where the keys are the factors and the values are the exponents.
      * Since the reference to {@code terms} is not stored internally, it can be mutated without
      * affecting this object instance.
+     * Note: this constructor is package private.
      */
     Product(BigRational coefficient, SortedMap<Expression, Expression> terms) {
         this.coefficient = coefficient;

@@ -205,7 +205,7 @@ public abstract class Expression {
                         } else {
                             ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
                             terms.add(new Pair<>((Expression)newTokens.get(newTokens.size()-2), -1));
-                            exponent = new Sum(terms);
+                            exponent = Sum.parseSum(terms);
                         }
                         newTokens.remove(newTokens.size()-1);
                         newTokens.remove(newTokens.size()-1);
@@ -213,7 +213,7 @@ public abstract class Expression {
                         exponent = (Expression)newTokens.get(newTokens.size()-1);
                         newTokens.remove(newTokens.size()-1);
                     }
-                    newTokens.add(new Power(base, exponent));
+                    newTokens.add(Power.parsePower(base, exponent));
                     i--;// skip the base
                 } else newTokens.add(token);
             } else newTokens.add(tokens.get(i));
@@ -243,7 +243,7 @@ public abstract class Expression {
                             } else {
                                 ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
                                 terms.add(new Pair<>((Expression)tokens.get(i+2), -1));
-                                multiplicand = new Sum(terms);
+                                multiplicand = Sum.parseSum(terms);
                             }
                             i++;// skip negative sign
                         } else multiplicand = (Expression)tokens.get(i+1);
@@ -252,7 +252,7 @@ public abstract class Expression {
                         i++;// skip multiplicand
                     }
                     newTokens.remove(newTokens.size()-1);
-                    newTokens.add(new Product(factors, divisors));
+                    newTokens.add(Product.parseProduct(factors, divisors));
                 } else newTokens.add(tokens.get(i));
             } else newTokens.add(tokens.get(i));
         }
@@ -272,7 +272,7 @@ public abstract class Expression {
                 terms.add(new Pair<>(addend, leadingSign));
             }
         }
-        return new Sum(terms);
+        return Sum.parseSum(terms);
     }
 
     /**
@@ -280,7 +280,7 @@ public abstract class Expression {
      * @param str The provided {@code String}.
      * @return A new {@code String}.
      */
-    protected static String surroundInBrackets(String str) {
+    final protected static String surroundInBrackets(String str) {
         return new StringBuilder("(").append(str).append(")").toString();
     }
 
@@ -338,7 +338,7 @@ public abstract class Expression {
         ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
         terms.add(new Pair<>(this, 1));
         terms.add(new Pair<>(expression, 1));
-        return new Sum(terms);
+        return Sum.parseSum(terms);
     }
 
     /**
@@ -353,7 +353,7 @@ public abstract class Expression {
         ArrayList<Expression> divisors = new ArrayList<>();
         factors.add(this);
         divisors.add(expression);
-        return new Product(factors, divisors);
+        return Product.parseProduct(factors, divisors);
     }
 
     /**
@@ -366,17 +366,27 @@ public abstract class Expression {
         ArrayList<Expression> factors = new ArrayList<>();
         factors.add(this);
         factors.add(expression);
-        return new Product(factors, new ArrayList<>());
+        return Product.parseProduct(factors, new ArrayList<>());
     }
 
     /**
-     * Computes the value of {@code this ^ expression}.
+     * Returns an Expression whose value is {@code this ^ expression}.
      *
      * @param expression The exponent to which this Expression is to be raised.
      * @return {@code this ^ expression}
      */
     public Expression pow(Expression expression) {
-        return new Power(this, expression);
+        return Power.parsePower(this, expression);
+    }
+
+    /**
+     * Returns an Expression whose value is {@code (1 / this)}.
+     * @return {@code 1 / this}.
+     */
+    public Expression reciprocal() {
+        ArrayList<Expression> terms = new ArrayList<>();
+        terms.add(this);
+        return Product.parseProduct(new ArrayList<>(), terms);
     }
 
     /**
@@ -389,7 +399,7 @@ public abstract class Expression {
         ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
         terms.add(new Pair<>(this, 1));
         terms.add(new Pair<>(expression, -1));
-        return new Sum(terms);
+        return Sum.parseSum(terms);
     }
 
 
