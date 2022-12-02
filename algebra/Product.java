@@ -80,7 +80,9 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
         // print terms
         for(Map.Entry<Expression, Expression> term: product.terms.entrySet()) {
-            str.append(Power.toPowerString(new Power(term.getKey(), term.getValue())));
+            String termStr = Power.toPowerString(new Power(term.getKey(), term.getValue()));
+            if(term.getValue().equals(BigRational.ONE) && term.getKey() instanceof Sum) str.append(surroundInBrackets(termStr));
+            else str.append(termStr);
         }
 
         return str.toString();
