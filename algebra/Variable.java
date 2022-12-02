@@ -56,7 +56,7 @@ public class Variable extends Expression implements Comparable<Variable> {
 // <---------------------- Methods Implemented for Interfaces ---------------------->
 
     /**
-     * Compares two Variables based on the ordering of their names.
+     * Compares two Variables based on the natural ordering of their names.
      * @param o Another Variable.
      */
     @Override

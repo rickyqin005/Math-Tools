@@ -226,8 +226,8 @@ public class BigRational extends Expression {
             else if(exponent.signum() == -1) throw new ArithmeticException("BigRational: Zero raised to a negative power");
         }
         if(exponent.equals(ZERO)) return ONE;
+        if(exponent.signum() == -1) return reciprocal().pow(exponent.negate());
         if(exponent.isInteger()) {
-            if(exponent.signum() == -1) return reciprocal().pow(exponent.negate());
             try {
                 int exponentInt = exponent.numerator.intValueExact();
                 if(exponentInt <= 10) {

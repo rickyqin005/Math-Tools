@@ -30,7 +30,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
         if(terms.size() == 1) {
             return terms.get(0).first().multiply(new BigRational(terms.get(0).second()));
         }
-        return new Sum(terms);
+        Sum sum = new Sum(terms);
+        if(sum.terms.size() == 0) return sum.constant;
+        return sum;
     }
 
 // <------------------------------ Instance Variables ------------------------------>
@@ -103,7 +105,10 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
             else {
                 if(term.getValue().signum() >= 0) str.append('+');
             }
-            str.append(term.getValue().toString());
+
+            if(term.getValue().equals(BigRational.ONE));
+            else if(term.getValue().equals(BigRational.NEGATIVE_ONE)) str.append('-');
+            else str.append(term.getValue().toString());
             str.append(term.getKey().toString());
         }
 
@@ -170,21 +175,24 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
             if(term.second() == 1) constant = (BigRational)constant.add((BigRational)term.first());
             else constant = (BigRational)constant.subtract((BigRational)term.first());
 
-        } else if(term.first() instanceof Product) {
-            BigRational termCoefficient = ((Product)term.first()).getCoefficient();
-            Product newTerm = new Product(BigRational.ONE, ((Product)term.first()).getTerms());
-            this.terms.putIfAbsent(newTerm, BigRational.ZERO);
-            if(term.second() == 1) this.terms.replace(newTerm, (BigRational)this.terms.get(newTerm).add(termCoefficient));
-            else this.terms.replace(newTerm, (BigRational)this.terms.get(newTerm).subtract(termCoefficient));
-
         } else {
-            ArrayList<Expression> termFactor = new ArrayList<>();
-            termFactor.add(term.first());
-            Product newTerm = (Product)Product.parseProduct(termFactor, new ArrayList<>());
-            this.terms.putIfAbsent(newTerm, BigRational.ZERO);
-            if(term.second() == 1) this.terms.replace(newTerm, (BigRational)this.terms.get(newTerm).add(BigRational.ONE));
-            else this.terms.replace(newTerm, (BigRational)this.terms.get(newTerm).subtract(BigRational.ONE));
-
+            BigRational termCoefficient;
+            Product newTerm;
+            if(term.first() instanceof Product) {
+                termCoefficient = ((Product)term.first()).getCoefficient();
+                newTerm = new Product(BigRational.ONE, ((Product)term.first()).getTerms());
+            } else {
+                termCoefficient = BigRational.ONE;
+                ArrayList<Expression> termFactor = new ArrayList<>();
+                termFactor.add(term.first());
+                newTerm = (Product)Product.parseProduct(termFactor, new ArrayList<>());
+            }
+            BigRational newTermCoefficient = terms.get(newTerm);
+            if(newTermCoefficient == null) newTermCoefficient = BigRational.ZERO;
+            if(term.second() == 1) newTermCoefficient = (BigRational)newTermCoefficient.add(termCoefficient);
+            else newTermCoefficient = (BigRational)newTermCoefficient.subtract(termCoefficient);
+            if(newTermCoefficient.equals(BigRational.ZERO)) terms.remove(newTerm);
+            else terms.put(newTerm, newTermCoefficient);
         }
     }
 

@@ -34,29 +34,56 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         for(Expression factor: factors) {
             if(factor instanceof BigRational) {
                 res.coefficient = (BigRational)res.coefficient.multiply((BigRational)factor);
-            } else if(factor instanceof Power) {// Exponent Law: b^x * b^y = b^(x+y)
-                Power power = (Power)factor;
-                res.terms.putIfAbsent(power.getBase(), BigRational.ZERO);
-                res.terms.replace(power.getBase(), res.terms.get(power.getBase()).add(power.getExponent()));
             } else {
-                res.terms.putIfAbsent(factor, BigRational.ZERO);
-                res.terms.replace(factor, res.terms.get(factor).add(BigRational.ONE));
+                Expression term;
+                Expression termExponent;
+                if(factor instanceof Power) term = ((Power)factor).getBase();
+                else term = factor;
+                termExponent = res.terms.get(term);
+                if(termExponent == null) termExponent = BigRational.ZERO;
+                if(factor instanceof Power) termExponent = termExponent.add(((Power)factor).getExponent());
+                else termExponent = termExponent.add(BigRational.ONE);
+                if(termExponent.equals(BigRational.ZERO)) res.terms.remove(term);
+                else res.terms.put(term, termExponent);
             }
         }
         for(Expression divisor: divisors) {
-            if(divisor instanceof BigRational) res.coefficient = (BigRational)res.coefficient.divide((BigRational)divisor);
-            else if(divisor instanceof Power) {// Exponent Law: b^x / b^y = b^(x-y)
-                Power power = (Power)divisor;
-                res.terms.putIfAbsent(power.getBase(), BigRational.ZERO);
-                res.terms.replace(power.getBase(), res.terms.get(power.getBase()).subtract(power.getExponent()));
+            if(divisor instanceof BigRational) {
+                res.coefficient = (BigRational)res.coefficient.divide((BigRational)divisor);
             } else {
-                res.terms.putIfAbsent(divisor, BigRational.ZERO);
-                res.terms.replace(divisor, res.terms.get(divisor).subtract(BigRational.ONE));
+                Expression term;
+                Expression termExponent;
+                if(divisor instanceof Power) term = ((Power)divisor).getBase();
+                else term = divisor;
+                termExponent = res.terms.get(term);
+                if(termExponent == null) termExponent = BigRational.ZERO;
+                if(divisor instanceof Power) termExponent = termExponent.subtract(((Power)divisor).getExponent());
+                else termExponent = termExponent.subtract(BigRational.ONE);
+                if(termExponent.equals(BigRational.ZERO)) res.terms.remove(term);
+                else res.terms.put(term, termExponent);
             }
         }
-
         if(res.terms.size() == 0) return res.coefficient;
         else return res;
+    }
+
+    public static String toProductString(Product product) {
+        StringBuilder str = new StringBuilder();
+
+        // print coefficient
+        if(product.terms.size() == 0) str.append(product.coefficient.toString());
+        else {
+            if(product.coefficient.equals(BigRational.ONE));
+            else if(product.coefficient.equals(BigRational.NEGATIVE_ONE)) str.append('-');
+            else str.append(product.coefficient.toString());
+        }
+
+        // print terms
+        for(Map.Entry<Expression, Expression> term: product.terms.entrySet()) {
+            str.append(Power.toPowerString(new Power(term.getKey(), term.getValue())));
+        }
+
+        return str.toString();
     }
 
 // <------------------------------ Instance Variables ------------------------------>
@@ -116,23 +143,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder();
-
-        // print coefficient
-        if(!(coefficient.equals(BigRational.ONE) && terms.size() > 0)) {
-            str.append(coefficient.toString());
-        }
-
-        // print terms
-        for(Map.Entry<Expression, Expression> term: terms.entrySet()) {
-            str.append(surroundInBrackets(term.getKey().toString()));
-            if(!(term.getValue() instanceof BigRational && ((BigRational)term.getValue()).equals(BigRational.ONE))) {
-                str.append('^');
-                str.append(surroundInBrackets(term.getValue().toString()));
-            }
-        }
-
-        return str.toString();
+        return toProductString(this);
     }
 
 // <---------------------- Methods Implemented for Interfaces ---------------------->
