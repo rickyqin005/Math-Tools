@@ -21,18 +21,44 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 // <-------------------------------- Static Methods -------------------------------->
 
     /**
-     * Attempts to form a Sum Object using the provided terms.
+     * Attempts to form a Sum Object with the provided terms.
      * @param terms The terms.
      * @return A Sum object if there is more than one term. If there is one term,
      * the term itself along with its leading sign is returned.
      */
     public static Expression parseSum(ArrayList<Pair<Expression, Integer>> terms) {
-        if(terms.size() == 1) {
-            return terms.get(0).first().multiply(new BigRational(terms.get(0).second()));
-        }
         Sum sum = new Sum(terms);
+        Expression simplerForm = checkForSimplerForms(sum);
+        if(simplerForm == null) return sum;
+        else return simplerForm;
+    }
+
+    /**
+     * Attempts to form a Sum Object with the provided terms and constant.
+     * @param terms The terms.
+     * @param constant The constant.
+     * @return A Sum object if there is more than one term or if there is one term and a
+     * non-zero constant. If there is one term, the term itself along with its leading sign is returned.
+     * Otherwise, the constant term itself is returned.
+     */
+    public static Expression parseSum(TreeMap<Expression, BigRational> terms, BigRational constant) {
+        Sum sum = new Sum(terms, constant);
+        Expression simplerForm = checkForSimplerForms(sum);
+        if(simplerForm == null) return sum;
+        else return simplerForm;
+    }
+
+    /**
+     * Checks if the provided Sum object can be expressed as other simpler objects.
+     * @param sum The Sum.
+     * @return The simpler object if it can be expressed as such. Otherwise, {@code null} is returned.
+     */
+    private static Expression checkForSimplerForms(Sum sum) {
         if(sum.terms.size() == 0) return sum.constant;
-        return sum;
+        if(sum.terms.size() == 1 && sum.constant.equals(BigRational.ZERO)) {
+            return sum.terms.firstEntry().getKey().multiply(sum.terms.firstEntry().getValue());
+        }
+        return null;
     }
 
 // <------------------------------ Instance Variables ------------------------------>
@@ -136,7 +162,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     @Override
     public Expression add(Expression expression) {
         Sum newSum;
-        if(expression instanceof Sum) {
+        if(expression instanceof BigRational) {
+            newSum = new Sum(terms, (BigRational)constant.add(expression));
+        } else if(expression instanceof Sum) {
             newSum = new Sum(terms, constant);
             Iterator<Map.Entry<Expression, BigRational>> it = newSum.iterator();
             while(it.hasNext()) {
@@ -149,6 +177,26 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
             return newSum;
         }
         return newSum;
+    }
+
+    @Override
+    public String toFunctionString() {
+        StringBuilder str = new StringBuilder();
+        str.append("Sum(");
+        Iterator<Map.Entry<Expression, BigRational>> it = iterator();
+        while(it.hasNext()) {
+            Map.Entry<Expression, BigRational> term = it.next();
+            str.append('{');
+            str.append(term.getKey().toFunctionString());
+            str.append(':');
+            str.append(term.getValue().toFunctionString());
+            str.append('}');
+            if(it.hasNext()) str.append(", ");
+        }
+        str.append(", ");
+        str.append(constant.toFunctionString());
+        str.append(')');
+        return str.toString();
     }
 
     @Override
@@ -177,15 +225,15 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
         } else {
             BigRational termCoefficient;
-            Product newTerm;
+            Expression newTerm;
             if(term.first() instanceof Product) {
                 termCoefficient = ((Product)term.first()).getCoefficient();
-                newTerm = new Product(BigRational.ONE, ((Product)term.first()).getTerms());
+                newTerm = Product.parseProduct(BigRational.ONE, ((Product)term.first()).getTerms());
             } else {
                 termCoefficient = BigRational.ONE;
                 ArrayList<Expression> termFactor = new ArrayList<>();
                 termFactor.add(term.first());
-                newTerm = (Product)Product.parseProduct(termFactor, new ArrayList<>());
+                newTerm = Product.parseProduct(termFactor, new ArrayList<>());
             }
             BigRational newTermCoefficient = terms.get(newTerm);
             if(newTermCoefficient == null) newTermCoefficient = BigRational.ZERO;
@@ -212,8 +260,8 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
  * <p>A comparator that compares Expressions to determine their ordering in
  * a Product object.</p>
  *
- * <p>Note: Two Expressions of the same type are ordered arbitrarily. That is,
- * they can be in any order.</p>
+ * <p>Variable objects are ordered by their {@code compareTo} method.</p>
+ * <p>Otherwise, two Expressions of the same type are ordered by insertion order.</p>
  */
 class SumTermsComparator implements Comparator<Expression> {
 
@@ -222,7 +270,7 @@ class SumTermsComparator implements Comparator<Expression> {
         if(typeNum(o1) == typeNum(o2)) {
             if(o1 instanceof Variable) return ((Variable)o1).compareTo((Variable)o2);
             if(o1.equals(o2)) return 0;
-            return -1;
+            return 1;
         }
         return Integer.compare(typeNum(o1), typeNum(o2));
     }

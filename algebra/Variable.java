@@ -67,6 +67,11 @@ public class Variable extends Expression implements Comparable<Variable> {
 // <---------------------- Methods Overriden from super types ---------------------->
 
     @Override
+    public String toFunctionString() {
+        return "\"" + name + "\"";
+    }
+
+    @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
         Expression variableValue = variableValues.get(name);
         if(variableValue == null) throw new ArithmeticException("Variable: Undefined variable value");

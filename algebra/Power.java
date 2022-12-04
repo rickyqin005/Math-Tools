@@ -82,7 +82,8 @@ class Power extends Expression {
      * Constructs a Power object with the provided base and exponent.
      * @param base The base.
      * @param exponent The exponent.
-     * Note: this constructor is package private.
+     * Note: This constructor is package private and is made this way because some Power objects
+     * need to be made by bypassing validations.
      */
     Power(Expression base, Expression exponent) {
         this.base = base;
@@ -119,6 +120,17 @@ class Power extends Expression {
     }
 
 // <---------------------- Methods Overriden from super types ---------------------->
+
+    @Override
+    public String toFunctionString() {
+        StringBuilder str = new StringBuilder();
+        str.append("Power(");
+        str.append(base.toFunctionString());
+        str.append(", ");
+        str.append(exponent.toFunctionString());
+        str.append(")");
+        return str.toString();
+    }
 
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {

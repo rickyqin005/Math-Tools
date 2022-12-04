@@ -402,6 +402,11 @@ public abstract class Expression {
         return Sum.parseSum(terms);
     }
 
+    /**
+     * Returns the String representation of this Expression in function form.
+     * @return A string.
+     */
+    public abstract String toFunctionString();
 
     /**
      * Attempts to compute a numerical exact value for the current expression.

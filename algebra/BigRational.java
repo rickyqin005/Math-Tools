@@ -271,6 +271,10 @@ public class BigRational extends Expression {
         // a/b - c/d = ad/bd - bc/bd = (ad - bc)/bd
     }
 
+    @Override
+    public String toFunctionString() {
+        return "\"" + toString() + "\"";
+    }
 
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {

@@ -22,65 +22,74 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 // <-------------------------------- Static Methods -------------------------------->
 
     /**
-     * Attempts to form a Product Object using the provided terms.
-     * @param terms The terms.
+     * Attempts to form a Product object with the provided terms.
+     * @param factors The factors.
+     * @param divisors The divisors.
      * @return A Product object if there is more than one non-rational term. Otherwise, a
      * BigRational is returned.
      * Since the references to the lists are not stored internally, they can be mutated without
      * affecting this object instance.
      */
     public static Expression parseProduct(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
-        Product res = new Product();
-        for(Expression factor: factors) {
-            if(factor instanceof BigRational) {
-                res.coefficient = (BigRational)res.coefficient.multiply((BigRational)factor);
-            } else {
-                Expression term;
-                Expression termExponent;
-                if(factor instanceof Power) term = ((Power)factor).getBase();
-                else term = factor;
-                termExponent = res.terms.get(term);
-                if(termExponent == null) termExponent = BigRational.ZERO;
-                if(factor instanceof Power) termExponent = termExponent.add(((Power)factor).getExponent());
-                else termExponent = termExponent.add(BigRational.ONE);
-                if(termExponent.equals(BigRational.ZERO)) res.terms.remove(term);
-                else res.terms.put(term, termExponent);
-            }
-        }
-        for(Expression divisor: divisors) {
-            if(divisor instanceof BigRational) {
-                res.coefficient = (BigRational)res.coefficient.divide((BigRational)divisor);
-            } else {
-                Expression term;
-                Expression termExponent;
-                if(divisor instanceof Power) term = ((Power)divisor).getBase();
-                else term = divisor;
-                termExponent = res.terms.get(term);
-                if(termExponent == null) termExponent = BigRational.ZERO;
-                if(divisor instanceof Power) termExponent = termExponent.subtract(((Power)divisor).getExponent());
-                else termExponent = termExponent.subtract(BigRational.ONE);
-                if(termExponent.equals(BigRational.ZERO)) res.terms.remove(term);
-                else res.terms.put(term, termExponent);
-            }
-        }
-        if(res.terms.size() == 0) return res.coefficient;
-        else return res;
+        Product product = new Product(factors, divisors);
+        Expression simplerForm = checkForSimplerForms(product);
+        if(simplerForm == null) return product;
+        else return simplerForm;
     }
 
+    /**
+     * Attempts to form a Product object with the provided coefficient and terms.
+     * @param coefficient The coefficient.
+     * @return A Product object if there is more than one non-rational term. Otherwise, a
+     * BigRational is returned.
+     * Since the references to {@code terms} are not stored internally, they can be mutated without
+     * affecting this object instance.
+     */
+    public static Expression parseProduct(BigRational coefficient, SortedMap<Expression, Expression> terms) {
+        Product product = new Product(coefficient, terms);
+        Expression simplerForm = checkForSimplerForms(product);
+        if(simplerForm == null) return product;
+        else return simplerForm;
+    }
+
+    /**
+     * Checks if the provided Product object can be expressed as other simpler objects.
+     * @param product The Product.
+     * @return The simpler object if it can be expressed as such. Otherwise, {@code null} is returned.
+     */
+    private static Expression checkForSimplerForms(Product product) {
+        if(product.coefficient.equals(BigRational.ZERO)) return BigRational.ZERO;
+        if(product.terms.size() == 0) return product.coefficient;
+        if(product.terms.size() == 1 && product.coefficient.equals(BigRational.ONE)) {
+            return product.terms.firstEntry().getKey().pow(product.terms.firstEntry().getValue());
+        }
+        return null;
+    }
+
+    /**
+     * Returns the String representation of this Product object.
+     * @param product The Product.
+     * @return A String.
+     */
     public static String toProductString(Product product) {
         StringBuilder str = new StringBuilder();
 
         // print coefficient
-        if(product.terms.size() == 0) str.append(product.coefficient.toString());
-        else {
+        if(product.terms.size() == 0) {
+            str.append(product.coefficient.toString());
+        } else {
             if(product.coefficient.equals(BigRational.ONE));
             else if(product.coefficient.equals(BigRational.NEGATIVE_ONE)) str.append('-');
-            else str.append(product.coefficient.toString());
+            else {
+                str.append(product.coefficient.toString());
+            }
         }
 
         // print terms
         for(Map.Entry<Expression, Expression> term: product.terms.entrySet()) {
             String termStr = Power.toPowerString(new Power(term.getKey(), term.getValue()));
+            if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
+                Character.isDigit(termStr.charAt(0))) str.append('*');
             if(term.getValue().equals(BigRational.ONE) && term.getKey() instanceof Sum) str.append(surroundInBrackets(termStr));
             else str.append(termStr);
         }
@@ -104,17 +113,56 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
 // <--------------------------------- Constructors --------------------------------->
 
-    private Product() {}
+    /**
+     * Constructs a Product object using the provided terms.
+     * @param factors The terms.
+     * @param divisors The divisors.
+     * Since the references to the lists are not stored internally, they can be mutated without
+     * affecting this object instance.
+     */
+    private Product(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
+        for(Expression factor: factors) {
+            if(factor instanceof BigRational) {
+                coefficient = (BigRational)coefficient.multiply((BigRational)factor);
+            } else {
+                Expression term;
+                Expression termExponent;
+                if(factor instanceof Power) term = ((Power)factor).getBase();
+                else term = factor;
+                termExponent = terms.get(term);
+                if(termExponent == null) termExponent = BigRational.ZERO;
+                if(factor instanceof Power) termExponent = termExponent.add(((Power)factor).getExponent());
+                else termExponent = termExponent.add(BigRational.ONE);
+                if(termExponent.equals(BigRational.ZERO)) terms.remove(term);
+                else terms.put(term, termExponent);
+            }
+        }
+        for(Expression divisor: divisors) {
+            if(divisor instanceof BigRational) {
+                coefficient = (BigRational)coefficient.divide((BigRational)divisor);
+            } else {
+                Expression term;
+                Expression termExponent;
+                if(divisor instanceof Power) term = ((Power)divisor).getBase();
+                else term = divisor;
+                termExponent = terms.get(term);
+                if(termExponent == null) termExponent = BigRational.ZERO;
+                if(divisor instanceof Power) termExponent = termExponent.subtract(((Power)divisor).getExponent());
+                else termExponent = termExponent.subtract(BigRational.ONE);
+                if(termExponent.equals(BigRational.ZERO)) terms.remove(term);
+                else terms.put(term, termExponent);
+            }
+        }
+    }
 
     /**
-     * Constructs a Product Object with the provided coefficient and terms.
+     * Constructs a Product object with the provided coefficient and terms.
      * @param coefficient The coefficient.
      * @param terms The terms, where the keys are the factors and the values are the exponents.
      * Since the reference to {@code terms} is not stored internally, it can be mutated without
      * affecting this object instance.
-     * Note: this constructor is package private.
      */
-    Product(BigRational coefficient, SortedMap<Expression, Expression> terms) {
+    private Product(BigRational coefficient, SortedMap<Expression, Expression> terms) {
         this.coefficient = coefficient;
         this.terms = new TreeMap<>(terms);
     }
@@ -161,6 +209,26 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
 // <---------------------- Methods Overriden from super types ---------------------->
+
+    @Override
+    public String toFunctionString() {
+        StringBuilder str = new StringBuilder();
+        str.append("Product(");
+        str.append(coefficient.toFunctionString());
+        str.append(", ");
+        Iterator<Map.Entry<Expression, Expression>> it = iterator();
+        while(it.hasNext()) {
+            Map.Entry<Expression, Expression> term = it.next();
+            str.append('{');
+            str.append(term.getKey().toFunctionString());
+            str.append(':');
+            str.append(term.getValue().toFunctionString());
+            str.append('}');
+            if(it.hasNext()) str.append(", ");
+        }
+        str.append(')');
+        return str.toString();
+    }
 
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
@@ -216,7 +284,7 @@ class ProductTermsComparator implements Comparator<Expression> {
         if(typeNum(o1) == typeNum(o2)) {
             if(o1 instanceof Variable) return ((Variable)o1).compareTo((Variable)o2);
             if(o1.equals(o2)) return 0;
-            return -1;
+            return 1;
         }
         return Integer.compare(typeNum(o1), typeNum(o2));
     }
