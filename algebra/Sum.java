@@ -124,21 +124,20 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        // TODO
+
         boolean isFirstTerm = true;
         for(Map.Entry<Expression, BigRational> term: terms.entrySet()) {
             if(isFirstTerm) isFirstTerm = false;
-            else {
-                if(term.getValue().signum() >= 0) str.append('+');
-            }
+            else if(term.getValue().signum() >= 0) str.append('+');
 
             if(term.getValue().equals(BigRational.ONE));
             else if(term.getValue().equals(BigRational.NEGATIVE_ONE)) str.append('-');
             else str.append(term.getValue().toString());
-            str.append(term.getKey().toString());
+            if(term.getKey() instanceof Sum) str.append(surroundInBrackets(term.getKey().toString()));
+            else str.append(term.getKey().toString());
         }
 
-        if(constant.signum() != 0) {
+        if(!constant.equals(BigRational.ZERO)) {
             if(terms.size() > 0 && constant.signum() == 1) str.append('+');
             str.append(constant.toString());
         }
@@ -220,8 +219,8 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
      */
     private void addTerm(Pair<Expression, Integer> term) {
         if(term.first() instanceof BigRational) {
-            if(term.second() == 1) constant = (BigRational)constant.add((BigRational)term.first());
-            else constant = (BigRational)constant.subtract((BigRational)term.first());
+            if(term.second() == 1) constant = (BigRational)constant.add(term.first());
+            else constant = (BigRational)constant.subtract(term.first());
 
         } else {
             BigRational termCoefficient;

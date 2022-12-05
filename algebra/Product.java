@@ -63,38 +63,11 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         if(product.terms.size() == 1 && product.coefficient.equals(BigRational.ONE)) {
             return product.terms.firstEntry().getKey().pow(product.terms.firstEntry().getValue());
         }
+        if(product.terms.size() == 1 && product.terms.firstEntry().getKey() instanceof Product &&
+            product.terms.firstEntry().getValue().equals(BigRational.ONE))
+            return new Product((BigRational)product.coefficient.multiply(((Product)product.terms.firstEntry().getKey()).coefficient),
+                ((Product)product.terms.firstEntry().getKey()).terms);
         return null;
-    }
-
-    /**
-     * Returns the String representation of this Product object.
-     * @param product The Product.
-     * @return A String.
-     */
-    public static String toProductString(Product product) {
-        StringBuilder str = new StringBuilder();
-
-        // print coefficient
-        if(product.terms.size() == 0) {
-            str.append(product.coefficient.toString());
-        } else {
-            if(product.coefficient.equals(BigRational.ONE));
-            else if(product.coefficient.equals(BigRational.NEGATIVE_ONE)) str.append('-');
-            else {
-                str.append(product.coefficient.toString());
-            }
-        }
-
-        // print terms
-        for(Map.Entry<Expression, Expression> term: product.terms.entrySet()) {
-            String termStr = Power.toPowerString(new Power(term.getKey(), term.getValue()));
-            if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
-                Character.isDigit(termStr.charAt(0))) str.append('*');
-            if(term.getValue().equals(BigRational.ONE) && term.getKey() instanceof Sum) str.append(surroundInBrackets(termStr));
-            else str.append(termStr);
-        }
-
-        return str.toString();
     }
 
 // <------------------------------ Instance Variables ------------------------------>
@@ -123,7 +96,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     private Product(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
         for(Expression factor: factors) {
             if(factor instanceof BigRational) {
-                coefficient = (BigRational)coefficient.multiply((BigRational)factor);
+                coefficient = (BigRational)coefficient.multiply(factor);
             } else {
                 Expression term;
                 Expression termExponent;
@@ -139,7 +112,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         }
         for(Expression divisor: divisors) {
             if(divisor instanceof BigRational) {
-                coefficient = (BigRational)coefficient.divide((BigRational)divisor);
+                coefficient = (BigRational)coefficient.divide(divisor);
             } else {
                 Expression term;
                 Expression termExponent;
@@ -193,7 +166,27 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
     @Override
     public String toString() {
-        return toProductString(this);
+        StringBuilder str = new StringBuilder();
+
+        // print coefficient
+        if(terms.size() == 0) str.append(coefficient.toString());
+        else {
+            if(coefficient.equals(BigRational.ONE));
+            else if(coefficient.equals(BigRational.NEGATIVE_ONE)) str.append('-');
+            else str.append(coefficient.toString());
+        }
+
+        // print terms
+        for(Map.Entry<Expression, Expression> term: terms.entrySet()) {
+            String termStr = new Power(term.getKey(), term.getValue()).toString();
+            if((term.getKey() instanceof Sum || term.getKey() instanceof Product) &&
+                term.getValue().equals(BigRational.ONE)) termStr = surroundInBrackets(termStr);
+            if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
+                Character.isDigit(termStr.charAt(0))) str.append('*');
+            else str.append(termStr);
+        }
+
+        return str.toString();
     }
 
 // <---------------------- Methods Implemented for Interfaces ---------------------->
@@ -274,8 +267,8 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
  * <p>A comparator that compares Expressions to determine their ordering in
  * a Product object.</p>
  *
- * <p>Note: Two Expressions of the same type are ordered arbitrarily. That is,
- * they can be in any order.</p>
+ * <p>Variable objects are ordered by their {@code compareTo} method.</p>
+ * <p>Otherwise, two Expressions of the same type are ordered by insertion order.</p>
  */
 class ProductTermsComparator implements Comparator<Expression> {
 

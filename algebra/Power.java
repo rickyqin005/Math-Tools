@@ -24,44 +24,15 @@ class Power extends Expression {
      */
     public static Expression parsePower(Expression base, Expression exponent) {
         if(exponent instanceof BigRational) {
-            if(base instanceof BigRational) return ((BigRational)base).pow(exponent);
-            else if(((BigRational)exponent).equals(BigRational.ONE)) return base;
-        } else {
-            if(base instanceof BigRational && ((BigRational)base).equals(BigRational.ONE)) return BigRational.ONE;
+            if(base instanceof BigRational) return base.pow(exponent);
+            if(exponent.equals(BigRational.ONE)) return base;
+            if(exponent.equals(BigRational.ZERO)) return BigRational.ONE;
+        }
+        if(base instanceof BigRational) {
+            if(base.equals(BigRational.ONE)) return BigRational.ONE;
+            if(base.equals(BigRational.ZERO)) return BigRational.ZERO;
         }
         return new Power(base, exponent);
-    }
-
-    public static String toPowerString(Power pow) {
-        StringBuilder str = new StringBuilder();
-
-        // print the base
-        boolean printBaseBrackets = true;
-        if(pow.base instanceof BigRational) {
-            if(((BigRational)pow.base).signum() >= 0 && ((BigRational)pow.base).isInteger()) printBaseBrackets = false;
-        }
-        if(pow.base instanceof Variable) printBaseBrackets = false;
-
-        boolean printExponent = false;
-        boolean printExponentBrackets = false;
-        if(!(pow.exponent instanceof BigRational) || !pow.exponent.equals(BigRational.ONE)) {
-            printExponent = true;
-            printExponentBrackets = true;
-            if(pow.exponent instanceof BigRational) {
-                if(((BigRational)pow.exponent).isInteger()) printExponentBrackets = false;
-            }
-            if(pow.exponent instanceof Variable) printExponentBrackets = false;
-        }
-        if(!printExponent) printBaseBrackets = false;
-
-        if(printBaseBrackets) str.append(surroundInBrackets(pow.base.toString()));
-        else str.append(pow.base.toString());
-        if(printExponent) {
-            str.append('^');
-            if(printExponentBrackets) str.append(surroundInBrackets(pow.exponent.toString()));
-            else str.append(pow.exponent.toString());
-        }
-        return str.toString();
     }
 
 // <------------------------------ Instance Variables ------------------------------>
@@ -116,7 +87,35 @@ class Power extends Expression {
 
     @Override
     public String toString() {
-        return toPowerString(this);
+        StringBuilder str = new StringBuilder();
+
+        // print the base
+        boolean printBaseBrackets = true;
+        if(base instanceof BigRational) {
+            if(((BigRational)base).signum() >= 0 && ((BigRational)base).isInteger()) printBaseBrackets = false;
+        }
+        if(base instanceof Variable) printBaseBrackets = false;
+
+        boolean printExponent = false;
+        boolean printExponentBrackets = false;
+        if(!(exponent instanceof BigRational) || !exponent.equals(BigRational.ONE)) {
+            printExponent = true;
+            printExponentBrackets = true;
+            if(exponent instanceof BigRational) {
+                if(((BigRational)exponent).isInteger()) printExponentBrackets = false;
+            }
+            if(exponent instanceof Variable) printExponentBrackets = false;
+        }
+        if(!printExponent) printBaseBrackets = false;
+
+        if(printBaseBrackets) str.append(surroundInBrackets(base.toString()));
+        else str.append(base.toString());
+        if(printExponent) {
+            str.append('^');
+            if(printExponentBrackets) str.append(surroundInBrackets(exponent.toString()));
+            else str.append(exponent.toString());
+        }
+        return str.toString();
     }
 
 // <---------------------- Methods Overriden from super types ---------------------->
@@ -143,7 +142,7 @@ class Power extends Expression {
         Expression newBase = base.simplify();
         Expression newExponent = exponent.simplify();
         if(newBase instanceof BigRational && newExponent instanceof BigRational) {
-            return ((BigRational)newBase).pow((BigRational)newExponent);
+            return newBase.pow(newExponent);
 
         } else if(newBase instanceof Product) {// Exponent Law: (abc)^x = a^x * b^x * c^x
             Iterator<Map.Entry<Expression, Expression>> newBaseIterator = ((Product)newBase).iterator();
