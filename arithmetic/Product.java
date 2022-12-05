@@ -1,4 +1,4 @@
-package algebra;
+package arithmetic;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import algebra.Variable;
 
 /**
  * <p>An object representing a product or division of expressions.</p>

@@ -1,9 +1,11 @@
-package algebra;
+package arithmetic;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import algebra.Variable;
 
 /**
  * <p>An object representing a Power in the form {@code base ^ exponent}.</p>

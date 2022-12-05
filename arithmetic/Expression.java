@@ -1,9 +1,10 @@
-package algebra;
+package arithmetic;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
+import algebra.Variable;
 import utility.Pair;
 
 /**

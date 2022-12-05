@@ -1,6 +1,6 @@
 import java.util.Scanner;
 
-import algebra.Expression;
+import arithmetic.Expression;
 
 public class testing {
     public static Scanner in = new Scanner(System.in);

@@ -1,7 +1,7 @@
 package utility;
 
 /**
- * An immutable object containing two values of any type.
+ * <p>An immutable object containing two values of any type.</p>
  */
 public class Pair<A, B> {
     /**

@@ -1,4 +1,4 @@
-package algebra;
+package arithmetic;
 
 import java.math.BigInteger;
 import java.util.HashMap;

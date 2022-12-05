@@ -2,6 +2,8 @@ package algebra;
 
 import java.util.HashMap;
 
+import arithmetic.Expression;
+
 /**
  * <p>A class representing variables.</p>
  */
