@@ -185,7 +185,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
                 term.getValue().equals(BigRational.ONE)) termStr = surroundInBrackets(termStr);
             if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
                 Character.isDigit(termStr.charAt(0))) str.append('*');
-            else str.append(termStr);
+            str.append(termStr);
         }
 
         return str.toString();

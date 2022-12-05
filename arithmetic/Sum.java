@@ -135,7 +135,12 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
             else if(term.getValue().equals(BigRational.NEGATIVE_ONE)) str.append('-');
             else str.append(term.getValue().toString());
             if(term.getKey() instanceof Sum) str.append(surroundInBrackets(term.getKey().toString()));
-            else str.append(term.getKey().toString());
+            else {
+                String termStr = term.getKey().toString();
+                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
+                    Character.isDigit(termStr.charAt(0))) str.append('*');
+                str.append(termStr);
+            }
         }
 
         if(!constant.equals(BigRational.ZERO)) {
