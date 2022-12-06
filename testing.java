@@ -11,9 +11,8 @@ public class testing {
                 String str = in.nextLine();
                 Expression expression = Expression.parse(str);
                 System.out.println("= " + expression);
+                System.out.println("= " + expression.toLatexString());
                 System.out.println("= " + expression.toFunctionString());
-                Expression simplifiedExpression = expression.simplify();
-                System.out.println("= " + simplifiedExpression);
             } catch (Exception e) {
                 System.out.println(e);
             }

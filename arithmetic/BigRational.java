@@ -114,6 +114,15 @@ public class BigRational extends Expression {
     }
 
     /**
+     * Constructs a BigRational with the specified BigInteger value.
+     * @param numerator The value to be represented.
+     */
+    public BigRational(BigInteger numerator) {
+        this.numerator = numerator;
+        this.denominator = BigInteger.ONE;
+    }
+
+    /**
      * Constructs a BigRational with the specified numerator and denominator.
      * @param numerator The value of the numerator.
      * @param denominator The value of the denominator.
@@ -154,8 +163,7 @@ public class BigRational extends Expression {
      */
     @Override
     public String toString() {
-        if(denominator.equals(BigInteger.ZERO)) return "undefined";
-        if(denominator.equals(BigInteger.ONE)) return numerator.toString();
+        if(isInteger()) return numerator.toString();
         return numerator.toString() + "/" + denominator.toString();
     }
 
@@ -207,6 +215,16 @@ public class BigRational extends Expression {
     }
 
     /**
+     * Returns a BigRational whose value is {@code (-this)}.
+     *
+     * @return {@code -this}
+     */
+    @Override
+    public BigRational negate() {
+        return new BigRational(numerator.negate(), denominator);
+    }
+
+    /**
      * Computes the value of {@code this ^ expression}.
      *
      * @param expression The exponent to which this BigRational is to be raised.
@@ -222,8 +240,8 @@ public class BigRational extends Expression {
         if(equals(ONE)) return ONE;
         if(equals(ZERO)) {
             if(exponent.signum() == 1) return ZERO;
-            else if(exponent.signum() == 0) throw new ArithmeticException("BigRational: Zero raised to the zeroth power");
-            else if(exponent.signum() == -1) throw new ArithmeticException("BigRational: Zero raised to a negative power");
+            if(exponent.signum() == 0) throw new ArithmeticException("BigRational: Zero raised to the zeroth power");
+            if(exponent.signum() == -1) throw new ArithmeticException("BigRational: Zero raised to a negative power");
         }
         if(exponent.equals(ZERO)) return ONE;
         if(exponent.signum() == -1) return reciprocal().pow(exponent.negate());
@@ -264,11 +282,31 @@ public class BigRational extends Expression {
      */
     @Override
     public Expression subtract(Expression expression) {
-        if(!(expression instanceof BigRational)) expression.subtract(this);
+        if(!(expression instanceof BigRational)) return expression.negate().add(this);
         BigRational val = (BigRational)expression;
         return new BigRational((numerator.multiply(val.denominator)).subtract(denominator.multiply(val.numerator)),
             denominator.multiply(val.denominator));
         // a/b - c/d = ad/bd - bc/bd = (ad - bc)/bd
+    }
+
+    /**
+     * Returns the LaTeX String representation of this BigRational.
+     * @return A string.
+     * If this BigRational is negative, the sign will be displayed directly in front. If the BigRational is
+     * not an integer, it will be represented as a fraction using the {@code \dfrac} command.
+     */
+    @Override
+    public String toLatexString() {
+        if(isInteger()) return numerator.toString();
+        StringBuilder str = new StringBuilder();
+        if(signum() == -1) str.append('-');
+        str.append("\\dfrac{");
+        if(signum() == -1) str.append(numerator.abs().toString());
+        else str.append(numerator.toString());
+        str.append("}{");
+        str.append(denominator.toString());
+        str.append('}');
+        return str.toString();
     }
 
     @Override
@@ -305,6 +343,22 @@ public class BigRational extends Expression {
     }
 
     /**
+     * Gets the numerator of this BigRational.
+     * @return The numerator.
+     */
+    public BigRational getNumerator() {
+        return new BigRational(numerator);
+    }
+
+    /**
+     * Gets the denominator of this BigRational.
+     * @return The denominator.
+     */
+    public BigRational getDenominator() {
+        return new BigRational(denominator);
+    }
+
+    /**
      * Returns a BigRational whose value is the absolute value of this
      * BigRational.
      * @return {@code abs(this)}
@@ -322,17 +376,16 @@ public class BigRational extends Expression {
     }
 
     /**
-     * Returns a BigRational whose value is {@code (-this)}.
-     *
-     * @return {@code -this}
+     * Determines whether or not this BigRational is a reciprocal of an integer.
+     * @return True if this BigRational is a reciprocal of an integer.
      */
-    public BigRational negate() {
-        return new BigRational(numerator.negate(), denominator);
+    public boolean isReciprocalInteger() {
+        return numerator.abs().equals(BigInteger.ONE);
     }
 
     /**
      * Returns an int representing the sign of this BigRational:
-     * 1, 0, or -1 if this BigRational is positive, zero or negative.
+     * {@code 1}, {@code 0}, or {@code -1} if this BigRational is positive, zero or negative.
      */
     public int signum() {
         return numerator.signum();

@@ -69,6 +69,11 @@ public class Variable extends Expression implements Comparable<Variable> {
 // <---------------------- Methods Overriden from super types ---------------------->
 
     @Override
+    public String toLatexString() {
+        return name;
+    }
+
+    @Override
     public String toFunctionString() {
         return "\"" + name + "\"";
     }

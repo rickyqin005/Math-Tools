@@ -184,6 +184,35 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
         return newSum;
     }
 
+
+    @Override
+    public String toLatexString() {
+        StringBuilder str = new StringBuilder();
+
+        boolean isFirstTerm = true;
+        for(Map.Entry<Expression, BigRational> term: terms.entrySet()) {
+            if(isFirstTerm) isFirstTerm = false;
+            else if(term.getValue().signum() >= 0) str.append('+');
+
+            if(term.getValue().equals(BigRational.ONE));
+            else if(term.getValue().equals(BigRational.NEGATIVE_ONE)) str.append('-');
+            else str.append(term.getValue().toLatexString());
+            if(term.getKey() instanceof Sum) str.append(surroundInBrackets(term.getKey().toLatexString()));
+            else {
+                String termStr = term.getKey().toLatexString();
+                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
+                    Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
+                str.append(termStr);
+            }
+        }
+
+        if(!constant.equals(BigRational.ZERO)) {
+            if(terms.size() > 0 && constant.signum() == 1) str.append('+');
+            str.append(constant.toLatexString());
+        }
+        return str.toString();
+    }
+
     @Override
     public String toFunctionString() {
         StringBuilder str = new StringBuilder();

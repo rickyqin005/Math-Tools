@@ -279,10 +279,19 @@ public abstract class Expression {
     /**
      * Surrounds the provided {@code String} with a pair of round brackets.
      * @param str The provided {@code String}.
-     * @return A new {@code String}.
+     * @return A {@code String}.
      */
     final protected static String surroundInBrackets(String str) {
-        return new StringBuilder("(").append(str).append(")").toString();
+        return new StringBuilder("(").append(str).append(')').toString();
+    }
+
+    /**
+     * Surrounds the provided {@code String} with a pair of curly brackets.
+     * @param str The provided {@code String}.
+     * @return A {@code String}.
+     */
+    final protected static String surroundInCurlyBrackets(String str) {
+        return new StringBuilder("{").append(str).append('}').toString();
     }
 
     /**
@@ -371,6 +380,15 @@ public abstract class Expression {
     }
 
     /**
+     * Returns a BigRational whose value is {@code (-this)}.
+     *
+     * @return {@code -this}
+     */
+    public Expression negate() {
+        return multiply(BigRational.NEGATIVE_ONE);
+    }
+
+    /**
      * Returns an Expression whose value is {@code this ^ expression}.
      *
      * @param expression The exponent to which this Expression is to be raised.
@@ -402,6 +420,13 @@ public abstract class Expression {
         terms.add(new Pair<>(expression, -1));
         return Sum.parseSum(terms);
     }
+
+
+    /**
+     * Returns the LaTeX String representation of this Expression.
+     * @return A string.
+     */
+    public abstract String toLatexString();
 
     /**
      * Returns the String representation of this Expression in function form.

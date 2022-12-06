@@ -182,7 +182,8 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         for(Map.Entry<Expression, Expression> term: terms.entrySet()) {
             String termStr = new Power(term.getKey(), term.getValue()).toString();
             if((term.getKey() instanceof Sum || term.getKey() instanceof Product) &&
-                term.getValue().equals(BigRational.ONE)) termStr = surroundInBrackets(termStr);
+                term.getValue().equals(BigRational.ONE) &&
+                (!coefficient.equals(BigRational.ONE) || terms.size() > 1)) termStr = surroundInBrackets(termStr);
             if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
                 Character.isDigit(termStr.charAt(0))) str.append('*');
             str.append(termStr);
@@ -204,6 +205,62 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
 // <---------------------- Methods Overriden from super types ---------------------->
+
+    @Override
+    public String toLatexString() {
+        StringBuilder str = new StringBuilder();
+        if(terms.size() == 0) return coefficient.toLatexString();
+
+        ArrayList<Power> top = new ArrayList<>();
+        ArrayList<Power> bottom = new ArrayList<>();
+        for(Map.Entry<Expression, Expression> term: terms.entrySet()) {
+            boolean putOnTop = true;
+            if(term.getValue() instanceof BigRational &&
+                ((BigRational)term.getValue()).signum() == -1) putOnTop = false;
+            if(term.getValue() instanceof Product &&
+                ((Product)term.getValue()).coefficient.signum() == -1) putOnTop = false;
+            if(putOnTop) top.add(new Power(term.getKey(), term.getValue()));
+            else bottom.add(new Power(term.getKey(), term.getValue().negate()));
+        }
+
+        BigRational coefficientTop = coefficient.getNumerator().abs();
+        BigRational coefficientBottom = coefficient.getDenominator();
+        boolean printCoefficientTop = !coefficientTop.equals(BigRational.ONE);
+        boolean printCoefficientBottom = !coefficientBottom.equals(BigRational.ONE);
+        int topItems = top.size() + (printCoefficientTop ? 1 : 0);
+        int bottomItems = bottom.size() + (printCoefficientBottom ? 1 : 0);
+
+        if(coefficient.signum() == -1) str.append('-');
+        if(bottomItems > 0) str.append("\\dfrac{");
+        if(printCoefficientTop) str.append(coefficientTop.toLatexString());
+        else if(top.size() == 0) str.append(BigRational.ONE.toLatexString());
+
+        for(Power term: top) {
+            String termStr = term.toLatexString();
+            if((term.getBase() instanceof Sum || term.getBase() instanceof Product) &&
+                term.getExponent().equals(BigRational.ONE) &&
+                (printCoefficientTop || topItems > 1)) termStr = surroundInBrackets(termStr);
+            if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
+                Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
+            str.append(termStr);
+        }
+
+        if(bottomItems > 0) {
+            str.append("}{");
+            if(!coefficient.isInteger()) str.append(coefficient.getDenominator().toLatexString());
+            for(Power term: bottom) {
+                String termStr = term.toLatexString();
+                if((term.getBase() instanceof Sum || term.getBase() instanceof Product) &&
+                    term.getExponent().equals(BigRational.ONE) &&
+                    (printCoefficientBottom || bottomItems > 1)) termStr = surroundInBrackets(termStr);
+                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
+                    Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
+                str.append(termStr);
+            }
+            str.append('}');
+        }
+        return str.toString();
+    }
 
     @Override
     public String toFunctionString() {
@@ -242,7 +299,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
         }
 
-        // TODO
+        // TODO Auto-generated method stub
         return null;
     }
 

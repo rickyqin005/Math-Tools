@@ -123,6 +123,30 @@ class Power extends Expression {
 // <---------------------- Methods Overriden from super types ---------------------->
 
     @Override
+    public String toLatexString() {
+        StringBuilder str = new StringBuilder();
+
+        // print the base
+        boolean printBaseBrackets = true;
+        if(base instanceof BigRational) {
+            if(((BigRational)base).signum() >= 0 && ((BigRational)base).isInteger()) printBaseBrackets = false;
+        }
+        if(base instanceof Variable) printBaseBrackets = false;
+
+        boolean printExponent = false;
+        if(!(exponent instanceof BigRational) || !exponent.equals(BigRational.ONE)) printExponent = true;
+        if(!printExponent) printBaseBrackets = false;
+
+        if(printBaseBrackets) str.append(surroundInBrackets(base.toLatexString()));
+        else str.append(base.toLatexString());
+        if(printExponent) {
+            str.append('^');
+            str.append(surroundInCurlyBrackets(exponent.toLatexString()));
+        }
+        return str.toString();
+    }
+
+    @Override
     public String toFunctionString() {
         StringBuilder str = new StringBuilder();
         str.append("Power(");
