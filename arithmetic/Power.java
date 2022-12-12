@@ -25,15 +25,20 @@ class Power extends Expression {
      * trivial cases, in which case a simplier expression can be returned.
      */
     public static Expression parsePower(Expression base, Expression exponent) {
-        if(exponent instanceof BigRational) {
-            if(base instanceof BigRational) return base.pow(exponent);
-            if(exponent.equals(BigRational.ONE)) return base;
-            if(exponent.equals(BigRational.ZERO)) return BigRational.ONE;
+        if(base instanceof BigRational && exponent instanceof BigRational) {
+            if(((BigRational)base).signum() == 0) {
+                if(((BigRational)exponent).signum() == 0)
+                    throw new ArithmeticException("Power: Zero raised to the zeroth power");
+                if(((BigRational)exponent).signum() == -1)
+                    throw new ArithmeticException("Power: Zero raised to a negative power");
+                return BigRational.ZERO;
+            }
+            if(((BigRational)exponent).signum() == 0) return BigRational.ONE;
         }
-        if(base instanceof BigRational) {
-            if(base.equals(BigRational.ONE)) return BigRational.ONE;
-            if(base.equals(BigRational.ZERO)) return BigRational.ZERO;
-        }
+        if(base instanceof BigRational && ((BigRational)base).equals(BigRational.ONE))
+            return BigRational.ONE;
+        if(exponent instanceof BigRational && ((BigRational)exponent).equals(BigRational.ONE))
+            return base;
         return new Power(base, exponent);
     }
 
@@ -137,7 +142,7 @@ class Power extends Expression {
         if(!(exponent instanceof BigRational) || !exponent.equals(BigRational.ONE)) printExponent = true;
         if(!printExponent) printBaseBrackets = false;
 
-        if(printBaseBrackets) str.append(surroundInBrackets(base.toLatexString()));
+        if(printBaseBrackets) str.append(surroundInBracketsLatex(base.toLatexString()));
         else str.append(base.toLatexString());
         if(printExponent) {
             str.append('^');

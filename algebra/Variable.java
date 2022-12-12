@@ -5,7 +5,7 @@ import java.util.HashMap;
 import arithmetic.Expression;
 
 /**
- * <p>A class representing variables.</p>
+ * <p>An immutable class representing variables.</p>
  */
 public class Variable extends Expression implements Comparable<Variable> {
 

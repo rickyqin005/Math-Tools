@@ -286,6 +286,15 @@ public abstract class Expression {
     }
 
     /**
+     * Surrounds the provided {@code String} with a pair of round brackets in a LaTex String.
+     * @param str The provided {@code String}.
+     * @return A {@code String}.
+     */
+    final protected static String surroundInBracketsLatex(String str) {
+        return new StringBuilder("\\left(").append(str).append("\\right)").toString();
+    }
+
+    /**
      * Surrounds the provided {@code String} with a pair of curly brackets.
      * @param str The provided {@code String}.
      * @return A {@code String}.
@@ -359,11 +368,7 @@ public abstract class Expression {
      * @throws ArithmeticException if {@code expression} simplifies to zero.
      */
     public Expression divide(Expression expression) {
-        ArrayList<Expression> factors = new ArrayList<>();
-        ArrayList<Expression> divisors = new ArrayList<>();
-        factors.add(this);
-        divisors.add(expression);
-        return Product.parseProduct(factors, divisors);
+        return Product.parseProduct(this, expression);
     }
 
     /**
@@ -403,9 +408,7 @@ public abstract class Expression {
      * @return {@code 1 / this}.
      */
     public Expression reciprocal() {
-        ArrayList<Expression> terms = new ArrayList<>();
-        terms.add(this);
-        return Product.parseProduct(new ArrayList<>(), terms);
+        return Product.parseProduct(BigRational.ONE, this);
     }
 
     /**

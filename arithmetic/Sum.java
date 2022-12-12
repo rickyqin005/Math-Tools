@@ -171,7 +171,7 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
             newSum = new Sum(terms, (BigRational)constant.add(expression));
         } else if(expression instanceof Sum) {
             newSum = new Sum(terms, constant);
-            Iterator<Map.Entry<Expression, BigRational>> it = newSum.iterator();
+            Iterator<Map.Entry<Expression, BigRational>> it = ((Sum)expression).iterator();
             while(it.hasNext()) {
                 newSum.addTerm(it.next());
             }
@@ -179,7 +179,6 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
         } else {
             newSum = new Sum(terms, constant);
             newSum.addTerm(new Pair<>(expression, 1));
-            return newSum;
         }
         return newSum;
     }
@@ -197,7 +196,7 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
             if(term.getValue().equals(BigRational.ONE));
             else if(term.getValue().equals(BigRational.NEGATIVE_ONE)) str.append('-');
             else str.append(term.getValue().toLatexString());
-            if(term.getKey() instanceof Sum) str.append(surroundInBrackets(term.getKey().toLatexString()));
+            if(term.getKey() instanceof Sum) str.append(surroundInBracketsLatex(term.getKey().toLatexString()));
             else {
                 String termStr = term.getKey().toLatexString();
                 if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&

@@ -15,7 +15,7 @@ import java.util.HashMap;
  * <p>BigRational constructors and operations throw {@code ArithmeticException} when
  * the denominator of the result is equal to {@code 0}.</p>
  */
-public class BigRational extends Expression {
+public class BigRational extends BigNumber {
 
 // <------------------------------- Static Variables ------------------------------->
 
@@ -222,46 +222,6 @@ public class BigRational extends Expression {
     @Override
     public BigRational negate() {
         return new BigRational(numerator.negate(), denominator);
-    }
-
-    /**
-     * Computes the value of {@code this ^ expression}.
-     *
-     * @param expression The exponent to which this BigRational is to be raised.
-     * @return Either a {@code BigRational} with the final result or a {@code Power} object.
-     * Precisely, a BigRational is returned if the numerator and denominator of the result does not exceed
-     * {@code POWER_EVALUATION_THRESHOLD} and the exponent is less than or equal to {@code 10}.
-     * Otherwise, a Power object is returned representing the operation.
-     */
-    @Override
-    public Expression pow(Expression expression) {
-        if(!(expression instanceof BigRational)) return super.pow(expression);
-        BigRational exponent = (BigRational)expression;
-        if(equals(ONE)) return ONE;
-        if(equals(ZERO)) {
-            if(exponent.signum() == 1) return ZERO;
-            if(exponent.signum() == 0) throw new ArithmeticException("BigRational: Zero raised to the zeroth power");
-            if(exponent.signum() == -1) throw new ArithmeticException("BigRational: Zero raised to a negative power");
-        }
-        if(exponent.equals(ZERO)) return ONE;
-        if(exponent.signum() == -1) return reciprocal().pow(exponent.negate());
-        if(exponent.isInteger()) {
-            try {
-                int exponentInt = exponent.numerator.intValueExact();
-                if(exponentInt <= 10) {
-                    BigInteger numeratorPow = numerator.pow(exponentInt);
-                    BigInteger denominatorPow = denominator.pow(exponentInt);
-                    if(numeratorPow.compareTo(POWER_EVALUATION_THRESHOLD) <= 0 &&
-                        denominatorPow.compareTo(POWER_EVALUATION_THRESHOLD) <= 0) {
-                            return new BigRational(numeratorPow, denominatorPow);
-                    }
-                    return new Power(this, exponent);
-                } return new Power(this, exponent);
-            } catch(ArithmeticException e) {// exponent is too big for an int
-                return new Power(this, exponent);
-            }
-        }
-        return new Power(this, exponent);
     }
 
     /**

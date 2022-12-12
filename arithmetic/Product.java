@@ -40,6 +40,26 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
     /**
+     * Attempts to form a Product object with the provided terms.
+     * @param factors The factor.
+     * @param divisors The divisor.
+     * @return A Product object if there is more than one non-rational term. Otherwise, a
+     * BigRational is returned.
+     * Since the references to the lists are not stored internally, they can be mutated without
+     * affecting this object instance.
+     */
+    public static Expression parseProduct(Expression factor, Expression divisor) {
+        ArrayList<Expression> factors = new ArrayList<>();
+        ArrayList<Expression> divisors = new ArrayList<>();
+        factors.add(factor);
+        divisors.add(divisor);
+        Product product = new Product(factors, divisors);
+        Expression simplerForm = checkForSimplerForms(product);
+        if(simplerForm == null) return product;
+        else return simplerForm;
+    }
+
+    /**
      * Attempts to form a Product object with the provided coefficient and terms.
      * @param coefficient The coefficient.
      * @return A Product object if there is more than one non-rational term. Otherwise, a
@@ -238,8 +258,8 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         for(Power term: top) {
             String termStr = term.toLatexString();
             if((term.getBase() instanceof Sum || term.getBase() instanceof Product) &&
-                term.getExponent().equals(BigRational.ONE) &&
-                (printCoefficientTop || topItems > 1)) termStr = surroundInBrackets(termStr);
+                (printCoefficientTop || topItems > 1 || coefficient.signum() == -1) &&
+                term.getExponent().equals(BigRational.ONE)) termStr = surroundInBracketsLatex(termStr);
             if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
                 Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
             str.append(termStr);
@@ -252,7 +272,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
                 String termStr = term.toLatexString();
                 if((term.getBase() instanceof Sum || term.getBase() instanceof Product) &&
                     term.getExponent().equals(BigRational.ONE) &&
-                    (printCoefficientBottom || bottomItems > 1)) termStr = surroundInBrackets(termStr);
+                    (printCoefficientBottom || bottomItems > 1)) termStr = surroundInBracketsLatex(termStr);
                 if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
                     Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
                 str.append(termStr);
