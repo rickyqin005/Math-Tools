@@ -2,6 +2,11 @@ package arithmetic;
 
 import java.util.HashMap;
 
+/**
+ * The base class for all objects that represent numerical values.
+ *
+ * @author  Ricky Qin
+ */
 public abstract class BigNumber extends Expression {
 
     /**

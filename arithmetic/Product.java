@@ -18,19 +18,21 @@ import algebra.Variable;
  * is not a Power has an exponent of {@code BigRational.ONE} and a factor
  * with a negative exponent indicates division. Any factors who are numbers
  * are stored as part of the coefficient.</p>
+ *
+ * @author Ricky Qin
  */
 class Product extends Expression implements Iterable<Map.Entry<Expression, Expression>> {
 
 // <-------------------------------- Static Methods -------------------------------->
 
     /**
-     * Attempts to form a Product object with the provided terms.
-     * @param factors The factors.
-     * @param divisors The divisors.
-     * @return A Product object if there is more than one non-rational term. Otherwise, a
+     * Attempts to form a Product object with the provided terms. Since the references to the
+     * lists are not stored internally, they can be mutated without affecting this object instance.
+     *
+     * @param factors   The factors.
+     * @param divisors  The divisors.
+     * @return          A Product object if there is more than one non-rational term. Otherwise, a
      * BigRational is returned.
-     * Since the references to the lists are not stored internally, they can be mutated without
-     * affecting this object instance.
      */
     public static Expression parseProduct(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
         Product product = new Product(factors, divisors);
@@ -40,13 +42,13 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
     /**
-     * Attempts to form a Product object with the provided terms.
-     * @param factors The factor.
-     * @param divisors The divisor.
-     * @return A Product object if there is more than one non-rational term. Otherwise, a
+     * Attempts to form a Product object with the provided terms. Since the references to the lists
+     * are not stored internally, they can be mutated without affecting this object instance.
+     *
+     * @param factors   The factor.
+     * @param divisors  The divisor.
+     * @return          A Product object if there is more than one non-rational term. Otherwise, a
      * BigRational is returned.
-     * Since the references to the lists are not stored internally, they can be mutated without
-     * affecting this object instance.
      */
     public static Expression parseProduct(Expression factor, Expression divisor) {
         ArrayList<Expression> factors = new ArrayList<>();
@@ -60,12 +62,13 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
     /**
-     * Attempts to form a Product object with the provided coefficient and terms.
-     * @param coefficient The coefficient.
-     * @return A Product object if there is more than one non-rational term. Otherwise, a
-     * BigRational is returned.
-     * Since the references to {@code terms} are not stored internally, they can be mutated without
-     * affecting this object instance.
+     * Attempts to form a Product object with the provided coefficient and terms. Since
+     * the references to {@code terms} are not stored internally, they can be mutated
+     * without affecting this object instance.
+     *
+     * @param coefficient  The coefficient.
+     * @return             A Product object if there is more than one non-rational term.
+     * Otherwise, a BigRational is returned.
      */
     public static Expression parseProduct(BigRational coefficient, SortedMap<Expression, Expression> terms) {
         Product product = new Product(coefficient, terms);
@@ -76,8 +79,8 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
     /**
      * Checks if the provided Product object can be expressed as other simpler objects.
-     * @param product The Product.
-     * @return The simpler object if it can be expressed as such. Otherwise, {@code null} is returned.
+     * @param product  The Product.
+     * @return         The simpler object if it can be expressed as such. Otherwise, {@code null} is returned.
      */
     private static Expression checkForSimplerForms(Product product) {
         if(product.coefficient.equals(BigRational.ZERO)) return BigRational.ZERO;
@@ -109,11 +112,11 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 // <--------------------------------- Constructors --------------------------------->
 
     /**
-     * Constructs a Product object using the provided terms.
-     * @param factors The terms.
-     * @param divisors The divisors.
-     * Since the references to the lists are not stored internally, they can be mutated without
-     * affecting this object instance.
+     * Constructs a Product object using the provided terms. Since the references to the lists
+     * are not stored internally, they can be mutated without affecting this object instance.
+     *
+     * @param factors   The terms.
+     * @param divisors  The divisors.
      */
     private Product(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
         for(Expression factor: factors) {
@@ -151,11 +154,11 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
     /**
-     * Constructs a Product object with the provided coefficient and terms.
-     * @param coefficient The coefficient.
-     * @param terms The terms, where the keys are the factors and the values are the exponents.
-     * Since the reference to {@code terms} is not stored internally, it can be mutated without
-     * affecting this object instance.
+     * Constructs a Product object with the provided coefficient and terms. Since the reference to
+     * {@code terms} is not stored internally, it can be mutated without affecting this object instance.
+     *
+     * @param coefficient  The coefficient.
+     * @param terms        The terms, where the keys are the factors and the values are the exponents.
      */
     private Product(BigRational coefficient, SortedMap<Expression, Expression> terms) {
         this.coefficient = coefficient;
@@ -166,9 +169,9 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
     /**
      * Compares this Product with the specified object for equality.
-     * @param o The object to which this Product is to be compared.
-     * @return True if the object is a Product and whose terms are
-     * identical to this Product.
+     *
+     * @param o  The object to which this Product is to be compared.
+     * @return   True if the object is a Product and whose terms are identical to this Product.
      */
     @Override
     public boolean equals(Object o) {
@@ -179,13 +182,18 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
     /**
      * Returns the hash code for this Product.
-     * @return The hash code for this Product.
+     *
+     * @return  The hash code for this Product.
      */
     @Override
     public int hashCode() {
         return coefficient.hashCode() ^ terms.hashCode();
     }
 
+
+    /**
+     * @return String
+     */
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
@@ -218,6 +226,8 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
      * Returns an iterator over the terms of this Product.
      * Each item in the iterator is an {@code Map.Entry} where the key is
      * the factor and the value is the exponent.
+     *
+     * @return The iterator
      */
     @Override
     public Iterator<Map.Entry<Expression, Expression>> iterator() {
@@ -226,6 +236,9 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
 // <---------------------- Methods Overriden from super types ---------------------->
 
+    /**
+     * @return String
+     */
     @Override
     public String toLatexString() {
         StringBuilder str = new StringBuilder();
@@ -282,6 +295,9 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         return str.toString();
     }
 
+    /**
+     * @return String
+     */
     @Override
     public String toFunctionString() {
         StringBuilder str = new StringBuilder();
@@ -302,12 +318,19 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         return str.toString();
     }
 
+    /**
+     * @param variableValues
+     * @return Expression
+     */
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * @return Expression
+     */
     @Override
     public Expression simplify() {
         // simplify individual factors and divisors
@@ -327,6 +350,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
     /**
      * Gets the coefficient of this Product.
+     *
      * @return The coefficient.
      */
     public BigRational getCoefficient() {
@@ -335,6 +359,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
     /**
      * Gets the terms of this Product.
+     *
      * @return A read-only copy of the terms.
      */
     public SortedMap<Expression, Expression> getTerms() {
@@ -348,6 +373,8 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
  *
  * <p>Variable objects are ordered by their {@code compareTo} method.</p>
  * <p>Otherwise, two Expressions of the same type are ordered by insertion order.</p>
+ *
+ * @author Ricky Qin
  */
 class ProductTermsComparator implements Comparator<Expression> {
 

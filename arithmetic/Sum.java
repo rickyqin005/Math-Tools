@@ -12,10 +12,13 @@ import utility.Pair;
 
 /**
  * <p>An object representing a sum or difference of expressions.</p>
+ *
  * <p>Internally, each term is stored as if it was a Power. A factor that
  * is not a Power has an exponent of {@code BigRational.ONE} and a factor
  * with a negative exponent indicates division. Any factors who are numbers
  * are stored as part of the coefficient.</p>
+ *
+ * @author Ricky Qin
  */
 class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRational>> {
 
@@ -23,8 +26,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
     /**
      * Attempts to form a Sum Object with the provided terms.
-     * @param terms The terms.
-     * @return A Sum object if there is more than one term. If there is one term,
+     *
+     * @param terms  The terms.
+     * @return       A Sum object if there is more than one term. If there is one term,
      * the term itself along with its leading sign is returned.
      */
     public static Expression parseSum(ArrayList<Pair<Expression, Integer>> terms) {
@@ -35,10 +39,11 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     }
 
     /**
-     * Attempts to form a Sum Object with the provided terms and constant.
-     * @param terms The terms.
-     * @param constant The constant.
-     * @return A Sum object if there is more than one term or if there is one term and a
+     * Attempts to form a Sum Object with the provided terms and constant.\
+     *
+     * @param terms     The terms.
+     * @param constant  The constant.
+     * @return          A Sum object if there is more than one term or if there is one term and a
      * non-zero constant. If there is one term, the term itself along with its leading sign is returned.
      * Otherwise, the constant term itself is returned.
      */
@@ -51,8 +56,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
     /**
      * Checks if the provided Sum object can be expressed as other simpler objects.
-     * @param sum The Sum.
-     * @return The simpler object if it can be expressed as such. Otherwise, {@code null} is returned.
+     *
+     * @param sum  The Sum.
+     * @return     The simpler object if it can be expressed as such. Otherwise, {@code null} is returned.
      */
     private static Expression checkForSimplerForms(Sum sum) {
         if(sum.terms.size() == 0) return sum.constant;
@@ -80,7 +86,8 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
     /**
      * Constructs a Sum object with the provided terms and their sign.
-     * @param terms The terms. Each term is represented by a pair where the
+     *
+     * @param terms  The terms. Each term is represented by a pair where the
      * first value is the expression and the second value is the leading sign:
      * 1 or -1 if the leading sign is positive or negative.
      */
@@ -90,8 +97,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
     /**
      * Constructs a Sum object with the provided terms and constant value.
-     * @param terms The terms.
-     * @param constant The constant.
+     *
+     * @param terms     The terms.
+     * @param constant  The constant.
      */
     private Sum(TreeMap<Expression, BigRational> terms, BigRational constant) {
         this.terms = new TreeMap<Expression, BigRational>(terms);
@@ -102,8 +110,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
     /**
      * Compares this Sum with the specified object for equality.
-     * @param o The object to which this Sum is to be compared.
-     * @return True if the object is a Sum and whose contents are identical
+     *
+     * @param o  The object to which this Sum is to be compared.
+     * @return   True if the object is a Sum and whose contents are identical
      * to this Sum.
      */
     @Override
@@ -115,13 +124,17 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
     /**
      * Returns the hash code for this Sum.
-     * @return The hash code for this Sum.
+     *
+     * @return  The hash code for this Sum.
      */
     @Override
     public int hashCode() {
         return constant.hashCode() ^ terms.hashCode();
     }
 
+    /**
+     * @return String
+     */
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
@@ -156,6 +169,8 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
      * Returns an iterator over the terms of this Sum.
      * Each item in the iterator is an {@code Map.Entry} where the key is
      * the term and the value is the coefficient of that term.
+     *
+     * @return The iterator
      */
     @Override
     public Iterator<Map.Entry<Expression, BigRational>> iterator() {
@@ -164,6 +179,10 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
 // <---------------------- Methods Overriden from super types ---------------------->
 
+    /**
+     * @param expression
+     * @return Expression
+     */
     @Override
     public Expression add(Expression expression) {
         Sum newSum;
@@ -183,7 +202,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
         return newSum;
     }
 
-
+    /**
+     * @return String
+     */
     @Override
     public String toLatexString() {
         StringBuilder str = new StringBuilder();
@@ -212,6 +233,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
         return str.toString();
     }
 
+    /**
+     * @return String
+     */
     @Override
     public String toFunctionString() {
         StringBuilder str = new StringBuilder();
@@ -232,12 +256,19 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
         return str.toString();
     }
 
+    /**
+     * @param variableValues
+     * @return Expression
+     */
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * @return Expression
+     */
     @Override
     public Expression simplify() {
         // TODO Auto-generated method stub
@@ -249,6 +280,7 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     /**
      * Adds the specified term to this Sum Object. This is a private helper method to construct
      * Sum objects.
+     *
      * @param term The term to add.
      */
     private void addTerm(Pair<Expression, Integer> term) {
@@ -280,6 +312,7 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     /**
      * Adds the specified term to this Sum Object. This is a private helper method to construct
      * Sum objects. This term must not represent a {@code BigRational}.
+     *
      * @param term The term to add.
      */
     private void addTerm(Map.Entry<Expression, BigRational> term) {
@@ -295,6 +328,8 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
  *
  * <p>Variable objects are ordered by their {@code compareTo} method.</p>
  * <p>Otherwise, two Expressions of the same type are ordered by insertion order.</p>
+ *
+ * @author Ricky Qin
  */
 class SumTermsComparator implements Comparator<Expression> {
 

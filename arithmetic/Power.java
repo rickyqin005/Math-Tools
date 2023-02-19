@@ -9,6 +9,8 @@ import algebra.Variable;
 
 /**
  * <p>An object representing a Power in the form {@code base ^ exponent}.</p>
+ *
+ * @author Ricky Qin
  */
 class Power extends Expression {
 
@@ -16,13 +18,12 @@ class Power extends Expression {
 
     /**
      * Attempts to form a Power Object using the provided base and exponent.
-     * @param base The base.
-     * @param exponent The exponent.
-     * @return A BigRational object if the power can be directly evaluated into a BigRational with
-     * neither the numerator or denominator exceeding {@code POWER_EVALUATION_THRESHOLD}. Otherwise,
-     * a Power object is returned.
      * Calling this method is favoured over directly calling the constructor because it checks for
      * trivial cases, in which case a simplier expression can be returned.
+     *
+     * @param base      The base.
+     * @param exponent  The exponent.
+     * @return          A BigRational object for trivial cases. Otherwise, a Power object is returned.
      */
     public static Expression parsePower(Expression base, Expression exponent) {
         if(base instanceof BigRational && exponent instanceof BigRational) {
@@ -58,10 +59,11 @@ class Power extends Expression {
 
     /**
      * Constructs a Power object with the provided base and exponent.
-     * @param base The base.
-     * @param exponent The exponent.
-     * Note: This constructor is package private and is made this way because some Power objects
+     * This constructor is package private and is made this way because some Power objects
      * need to be made by bypassing validations.
+     *
+     * @param base      The base.
+     * @param exponent  The exponent.
      */
     Power(Expression base, Expression exponent) {
         this.base = base;
@@ -72,8 +74,9 @@ class Power extends Expression {
 
     /**
      * Compares this Power with the specified object for equality.
-     * @param o The object to which this Power is to be compared.
-     * @return True if the object is a Power and whose base and exponent
+     *
+     * @param o  The object to which this Power is to be compared.
+     * @return   True if the object is a Power and whose base and exponent
      * is equal to this Power.
      */
     @Override
@@ -85,13 +88,20 @@ class Power extends Expression {
 
     /**
      * Returns the hash code for this Power.
-     * @return The hash code for this Power.
+     *
+     * @return The hash code for this Power, equal to {@code base ^ exponent}.
      */
     @Override
     public int hashCode() {
         return base.hashCode() ^ exponent.hashCode();
     }
 
+
+    /**
+     * Returns a string representation of this Power object.
+     *
+     * @return A string
+     */
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();

@@ -14,6 +14,9 @@ import java.util.HashMap;
  *
  * <p>BigRational constructors and operations throw {@code ArithmeticException} when
  * the denominator of the result is equal to {@code 0}.</p>
+ *
+ * @author  Ricky Qin
+ * @see     BigInteger
  */
 public class BigRational extends BigNumber {
 
@@ -44,19 +47,16 @@ public class BigRational extends BigNumber {
      */
     final public static BigRational NEGATIVE_ONE = new BigRational(-1);
 
-    /**
-     * The largest BigInteger that is allowed in a numerator or denominator after a {@code pow} operation.
-     */
-    final private static BigInteger POWER_EVALUATION_THRESHOLD = new BigInteger("1000");
-
 // <-------------------------------- Static Methods -------------------------------->
 
     /**
      * Parses the provided string argument as a BigRational.
      * The separator between the numerator and denominator must be the {@code '/'} character.
      * Both the numerator and denominator can be either an integer or a decimal number.
-     * @param str The {@code String} to be parsed.
-     * @return The BigRational represented by the string argument.
+     *
+     * @param str   The {@code String} to be parsed.
+     * @return      The BigRational represented by the string argument.
+     * @throws      NumberFormatException if there is an error while parsing the String
      */
     final public static BigRational parseNumber(String str) {
         String[] parts = str.split("/");
@@ -82,8 +82,9 @@ public class BigRational extends BigNumber {
     }
 
     /**
-     * Creates a new {@code ArithmeticException}.
+     * A helper method that creates a new {@code ArithmeticException}.
      * Meant to be called when the resultant BigRational has a denominator of {@code zero}.
+     *
      * @return A new {@code ArithmeticException} instance.
      */
     private static ArithmeticException divisionByZeroError() {
@@ -106,6 +107,7 @@ public class BigRational extends BigNumber {
 
     /**
      * Constructs a BigRational with the specified integer value.
+     *
      * @param numerator The value to be represented.
      */
     public BigRational(int numerator) {
@@ -115,6 +117,7 @@ public class BigRational extends BigNumber {
 
     /**
      * Constructs a BigRational with the specified BigInteger value.
+     *
      * @param numerator The value to be represented.
      */
     public BigRational(BigInteger numerator) {
@@ -124,8 +127,9 @@ public class BigRational extends BigNumber {
 
     /**
      * Constructs a BigRational with the specified numerator and denominator.
-     * @param numerator The value of the numerator.
-     * @param denominator The value of the denominator.
+     *
+     * @param numerator     The value of the numerator.
+     * @param denominator   The value of the denominator.
      */
     public BigRational(BigInteger numerator, BigInteger denominator) {
         this.numerator = numerator;
@@ -137,8 +141,9 @@ public class BigRational extends BigNumber {
 
     /**
      * Compares this BigRational with the specified object for equality.
+     *
      * @param o The object to which this BigInteger is to be compared.
-     * @return True if the object is a BigRational and whose value is numerically
+     * @return  True if the object is a BigRational and whose value is numerically
      * equal to this BigRational.
      */
     @Override
@@ -151,7 +156,9 @@ public class BigRational extends BigNumber {
 
     /**
      * Returns the hash code for this BigRational.
-     * @return The hash code for this BigRational.
+     *
+     * @return  The hash code for this BigRational, which is equal to
+     * {@code numerator ^ denominator}.
      */
     @Override
     public int hashCode() {
@@ -159,7 +166,9 @@ public class BigRational extends BigNumber {
     }
 
     /**
-     * Returns a {@code String} object representing the value of this BigRational.
+     * Returns a String object representing the value of this BigRational.
+     *
+     * @return  A string in the format {@code numerator/denominator}.
      */
     @Override
     public String toString() {
@@ -172,8 +181,8 @@ public class BigRational extends BigNumber {
     /**
      * Returns an Expression whose value is {@code (this + expression)}.
      *
-     * @param expression The expression to be added to this BigRational.
-     * @return {@code this + expression} An expression or a BigRational if
+     * @param expression  The expression to be added to this BigRational.
+     * @return            {@code this + expression} An expression or a BigRational if
      * {@code expression} is a BigRational.
      */
     @Override
@@ -188,9 +197,9 @@ public class BigRational extends BigNumber {
     /**
      * Returns a BigRational whose value is {@code (this / val)}.
      *
-     * @param  val The value by which this BigRational is to be divided.
-     * @return {@code this / val}
-     * @throws ArithmeticException if {@code val} is zero.
+     * @param expression The value by which this BigRational is to be divided.
+     * @return           {@code this / val}
+     * @throws           ArithmeticException if {@code val} is zero.
      */
     @Override
     public Expression divide(Expression expression) {
@@ -203,8 +212,8 @@ public class BigRational extends BigNumber {
     /**
      * Returns a BigRational whose value is {@code (this * val)}.
      *
-     * @param  val The value to be multiplied by this BigRational.
-     * @return {@code this * val}
+     * @param expression The value to be multiplied by this BigRational.
+     * @return           {@code this * val}
      */
     @Override
     public Expression multiply(Expression expression) {
@@ -226,7 +235,8 @@ public class BigRational extends BigNumber {
 
     /**
      * Returns a BigRational whose value is {@code (1 / this)}.
-     * @return {@code 1 / this}.
+     *
+     * @return {@code 1 / this}
      */
     @Override
     public BigRational reciprocal() {
@@ -237,7 +247,7 @@ public class BigRational extends BigNumber {
      * Returns an Expression whose value is {@code (this - expression)}.
      *
      * @param expression The expression to be subtracted from this BigRational.
-     * @return {@code this - expression} An expression or a BigRational if
+     * @return           {@code this - expression} An expression or a BigRational if
      * {@code expression} is a BigRational.
      */
     @Override
@@ -251,9 +261,10 @@ public class BigRational extends BigNumber {
 
     /**
      * Returns the LaTeX String representation of this BigRational.
-     * @return A string.
-     * If this BigRational is negative, the sign will be displayed directly in front. If the BigRational is
-     * not an integer, it will be represented as a fraction using the {@code \dfrac} command.
+     *
+     * @return A string. If this BigRational is negative, the sign will be displayed directly
+     * in front. If the BigRational is not an integer, it will be represented as a fraction
+     * using the {@code \dfrac} command.
      */
     @Override
     public String toLatexString() {
@@ -269,16 +280,29 @@ public class BigRational extends BigNumber {
         return str.toString();
     }
 
+
+    /**
+     * @return String
+     */
     @Override
     public String toFunctionString() {
         return "\"" + toString() + "\"";
     }
 
+
+    /**
+     * @param variableValues
+     * @return Expression
+     */
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
         return this;
     }
 
+
+    /**
+     * @return Expression
+     */
     @Override
     public Expression simplify() {
         return this;// already in lowest terms
@@ -290,6 +314,10 @@ public class BigRational extends BigNumber {
      * Modifies the numerator and denominator such that they are in lowest terms and
      * that the denominator is strictly positive.
      * Note: the value represented by the BigRational does not change.
+     * This is done so that all BigRationals representing the same value can be compared by just
+     * checking the numerator and denominator instead of also having to reduce it to lowest terms.
+     *
+     * @throws ArithmeticException if the denominator is {@code ZERO}.
      */
     private void normalize() {
         if(denominator.signum() == -1) {
@@ -304,6 +332,7 @@ public class BigRational extends BigNumber {
 
     /**
      * Gets the numerator of this BigRational.
+     *
      * @return The numerator.
      */
     public BigRational getNumerator() {
@@ -312,6 +341,7 @@ public class BigRational extends BigNumber {
 
     /**
      * Gets the denominator of this BigRational.
+     *
      * @return The denominator.
      */
     public BigRational getDenominator() {
@@ -321,6 +351,7 @@ public class BigRational extends BigNumber {
     /**
      * Returns a BigRational whose value is the absolute value of this
      * BigRational.
+     *
      * @return {@code abs(this)}
      */
     public BigRational abs() {
@@ -329,6 +360,7 @@ public class BigRational extends BigNumber {
 
     /**
      * Determines whether or not this BigRational is an integer.
+     *
      * @return True if this BigRational is an integer.
      */
     public boolean isInteger() {
@@ -337,6 +369,7 @@ public class BigRational extends BigNumber {
 
     /**
      * Determines whether or not this BigRational is a reciprocal of an integer.
+     *
      * @return True if this BigRational is a reciprocal of an integer.
      */
     public boolean isReciprocalInteger() {
@@ -345,7 +378,8 @@ public class BigRational extends BigNumber {
 
     /**
      * Returns an int representing the sign of this BigRational:
-     * {@code 1}, {@code 0}, or {@code -1} if this BigRational is positive, zero or negative.
+     *
+     * @return {@code 1}, {@code 0}, or {@code -1} if this BigRational is positive, zero or negative.
      */
     public int signum() {
         return numerator.signum();
