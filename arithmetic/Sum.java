@@ -11,12 +11,24 @@ import algebra.Variable;
 import utility.Pair;
 
 /**
- * <p>An object representing a sum or difference of expressions.</p>
+ * <p>An object representing a sum or difference of two or more expressions.</p>
  *
- * <p>Internally, each term is stored as if it was a Power. A factor that
- * is not a Power has an exponent of {@code BigRational.ONE} and a factor
- * with a negative exponent indicates division. Any factors who are numbers
- * are stored as part of the coefficient.</p>
+ * <p>Internally, the expressions are stored in a TreeMap, where each expression is
+ * mapped to its coefficient (a rational number). Essentially, each term is stored as
+ * if it was a Product. Notice that the coefficient must be a BigRational, which is
+ * different from a Product.
+ * A term that is not a Product has an implied coefficient of {@code BigRational.ONE}.
+ * A term with a negative exponent indicates subtraction.</p>
+ *
+ * <p>Any terms that are constant rational numbers are stored as part of the rational
+ * term. For instance, {@code -4/3} and {@code 5} is part of the rational term while
+ * {@code 5^0.5} is not. Internally, the key is {@code BigRational.ONE} and is mapped
+ * to the value of the rational term, if such a term exists. It is always the last
+ * entry in the TreeMap so it can be easily accessed. If the rational term does not
+ * exist, there is no such mapping.</p>
+ *
+ * <p>An empty sum will be interpreted as {@code BigRational.ZERO}
+ * and thus will return this value instead of a Sum object.</p>
  *
  * @author Ricky Qin
  */
@@ -27,7 +39,8 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     /**
      * Attempts to form a Sum Object with the provided terms.
      *
-     * @param terms  The terms.
+     * @param terms  A list of terms. Each term is a pair where the first value is the expression
+     * and second value represents addition or subtraction depending on whether it is positive or negative.
      * @return       A Sum object if there is more than one term. If there is one term,
      * the term itself along with its leading sign is returned.
      */
@@ -39,30 +52,15 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     }
 
     /**
-     * Attempts to form a Sum Object with the provided terms and constant.\
+     * Checks if the provided Sum object can be expressed as other simpler expressions.
      *
-     * @param terms     The terms.
-     * @param constant  The constant.
-     * @return          A Sum object if there is more than one term or if there is one term and a
-     * non-zero constant. If there is one term, the term itself along with its leading sign is returned.
-     * Otherwise, the constant term itself is returned.
-     */
-    public static Expression parseSum(TreeMap<Expression, BigRational> terms, BigRational constant) {
-        Sum sum = new Sum(terms, constant);
-        Expression simplerForm = checkForSimplerForms(sum);
-        if(simplerForm == null) return sum;
-        else return simplerForm;
-    }
-
-    /**
-     * Checks if the provided Sum object can be expressed as other simpler objects.
-     *
-     * @param sum  The Sum.
+     * @param sum  The Sum object.
      * @return     The simpler object if it can be expressed as such. Otherwise, {@code null} is returned.
      */
     private static Expression checkForSimplerForms(Sum sum) {
-        if(sum.terms.size() == 0) return sum.constant;
-        if(sum.terms.size() == 1 && sum.constant.equals(BigRational.ZERO)) {
+        if(sum.terms.size() == 0) return BigRational.ZERO;// empty sum
+        if(sum.terms.size() == 1) {
+            if(sum.terms.firstEntry().getKey().equals(BigRational.ONE)) return sum.terms.firstEntry().getValue();
             return sum.terms.firstEntry().getKey().multiply(sum.terms.firstEntry().getValue());
         }
         return null;
@@ -71,14 +69,11 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 // <------------------------------ Instance Variables ------------------------------>
 
     /**
-     * The constant term of this Sum, a rational number, initialized to {@code BigRational.ZERO}.
-     */
-    private BigRational constant = BigRational.ZERO;
-
-    /**
      * A {@code TreeMap} of terms in this Sum, where each term is mapped to its coefficient.
      * The default coefficient is {@code BigRational.ONE} and is never {@code BigRational.ZERO}.
      * Note that rational numbers are not a part of this Map and is instead part of the constant term.
+     * This particular term has a key of {@code BigRational.ONE} and a value of the rational constant.
+     * It is also the last entry in the TreeMap.
      */
     private TreeMap<Expression, BigRational> terms = new TreeMap<>(new SumTermsComparator());
 
@@ -96,14 +91,12 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     }
 
     /**
-     * Constructs a Sum object with the provided terms and constant value.
+     * Constructs a Sum object by cloning an existing Sum.
      *
-     * @param terms     The terms.
-     * @param constant  The constant.
+     * @param sum  The Sum object to clone.
      */
-    private Sum(TreeMap<Expression, BigRational> terms, BigRational constant) {
-        this.terms = new TreeMap<Expression, BigRational>(terms);
-        this.constant = constant;
+    private Sum(Sum sum) {
+        terms = (TreeMap<Expression, BigRational>)sum.terms.clone();
     }
 
 // <-------------------- Methods Overriden from java.lang.Object -------------------->
@@ -119,17 +112,17 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     public boolean equals(Object o) {
         if(o == this) return true;
         if(!(o instanceof Sum)) return false;
-        return (constant.equals(((Sum)o).constant) && terms.equals(((Sum)o).terms));
+        return (terms.equals(((Sum)o).terms));
     }
 
     /**
-     * Returns the hash code for this Sum.
+     * Returns the hash code for this Sum, equal to the hashes of its terms.
      *
      * @return  The hash code for this Sum.
      */
     @Override
     public int hashCode() {
-        return constant.hashCode() ^ terms.hashCode();
+        return terms.hashCode();
     }
 
     /**
@@ -141,24 +134,30 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
         boolean isFirstTerm = true;
         for(Map.Entry<Expression, BigRational> term: terms.entrySet()) {
+            // do not print plus sign for the first term
             if(isFirstTerm) isFirstTerm = false;
             else if(term.getValue().signum() >= 0) str.append('+');
 
+            if(term.getKey().equals(BigRational.ONE)) {
+                str.append(term.getValue().toString());
+                break;// always last entry
+            }
+
+            // coefficients of one are implicit and should not be displayed
             if(term.getValue().equals(BigRational.ONE));
             else if(term.getValue().equals(BigRational.NEGATIVE_ONE)) str.append('-');
             else str.append(term.getValue().toString());
-            if(term.getKey() instanceof Sum) str.append(surroundInBrackets(term.getKey().toString()));
+
+            // print the term itself
+            if(term.getKey() instanceof BigRational);
+            else if(term.getKey() instanceof Sum) str.append(surroundInBrackets(term.getKey().toString()));
             else {
                 String termStr = term.getKey().toString();
-                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
-                    Character.isDigit(termStr.charAt(0))) str.append('*');
+                // add '*' symbol if coefficient and term needs to be separated
+                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) && termStr.length() > 0
+                    && Character.isDigit(termStr.charAt(0))) str.append('*');
                 str.append(termStr);
             }
-        }
-
-        if(!constant.equals(BigRational.ZERO)) {
-            if(terms.size() > 0 && constant.signum() == 1) str.append('+');
-            str.append(constant.toString());
         }
         return str.toString();
     }
@@ -167,10 +166,10 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
     /**
      * Returns an iterator over the terms of this Sum.
-     * Each item in the iterator is an {@code Map.Entry} where the key is
+     * Each item in the iterator is a {@code Map.Entry} where the key is
      * the term and the value is the coefficient of that term.
      *
-     * @return The iterator
+     * @return  The iterator
      */
     @Override
     public Iterator<Map.Entry<Expression, BigRational>> iterator() {
@@ -185,18 +184,15 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
      */
     @Override
     public Expression add(Expression expression) {
-        Sum newSum;
+        Sum newSum = new Sum(this);
         if(expression instanceof BigRational) {
-            newSum = new Sum(terms, (BigRational)constant.add(expression));
+            newSum.addTerm(new Pair<>(expression, 1));
         } else if(expression instanceof Sum) {
-            newSum = new Sum(terms, constant);
             Iterator<Map.Entry<Expression, BigRational>> it = ((Sum)expression).iterator();
             while(it.hasNext()) {
                 newSum.addTerm(it.next());
             }
-            newSum.constant = (BigRational)newSum.constant.add(((Sum)expression).constant);
         } else {
-            newSum = new Sum(terms, constant);
             newSum.addTerm(new Pair<>(expression, 1));
         }
         return newSum;
@@ -211,24 +207,30 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
         boolean isFirstTerm = true;
         for(Map.Entry<Expression, BigRational> term: terms.entrySet()) {
+            // do not print plus sign for the first term
             if(isFirstTerm) isFirstTerm = false;
             else if(term.getValue().signum() >= 0) str.append('+');
 
+            if(term.getKey().equals(BigRational.ONE)) {
+                str.append(term.getValue().toLatexString());
+                break;// always last entry
+            }
+
+            // coefficients of one are implicit and should not be displayed
             if(term.getValue().equals(BigRational.ONE));
             else if(term.getValue().equals(BigRational.NEGATIVE_ONE)) str.append('-');
             else str.append(term.getValue().toLatexString());
-            if(term.getKey() instanceof Sum) str.append(surroundInBracketsLatex(term.getKey().toLatexString()));
+
+            // print term itself
+            if(term.getKey() instanceof BigRational);
+            else if(term.getKey() instanceof Sum) str.append(surroundInBracketsLatex(term.getKey().toLatexString()));
             else {
                 String termStr = term.getKey().toLatexString();
-                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
-                    Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
+                // add \cdot if coefficient and term needs to be separated
+                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) && termStr.length() > 0
+                    && Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
                 str.append(termStr);
             }
-        }
-
-        if(!constant.equals(BigRational.ZERO)) {
-            if(terms.size() > 0 && constant.signum() == 1) str.append('+');
-            str.append(constant.toLatexString());
         }
         return str.toString();
     }
@@ -250,8 +252,6 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
             str.append('}');
             if(it.hasNext()) str.append(", ");
         }
-        str.append(", ");
-        str.append(constant.toFunctionString());
         str.append(')');
         return str.toString();
     }
@@ -281,44 +281,60 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
      * Adds the specified term to this Sum Object. This is a private helper method to construct
      * Sum objects.
      *
-     * @param term The term to add.
+     * @param term  The term to add. The first value of the Pair is the term and the second
+     * value indicates whether the term is added or subtracted if it is non-negative or negative.
      */
     private void addTerm(Pair<Expression, Integer> term) {
+        BigRational termCoefficient;
+        Expression newTerm;
         if(term.first() instanceof BigRational) {
-            if(term.second() == 1) constant = (BigRational)constant.add(term.first());
-            else constant = (BigRational)constant.subtract(term.first());
-
+            termCoefficient = (BigRational)term.first();
+            newTerm = BigRational.ONE;
+        } else if(term.first() instanceof Product) {
+            termCoefficient = ((Product)term.first()).getCoefficient();
+            TreeMap<Expression, Expression> termsNoCoefficient = ((Product)term.first()).getTerms();
+            termsNoCoefficient.remove(termCoefficient);
+            newTerm = Product.parseProduct(termsNoCoefficient);
         } else {
-            BigRational termCoefficient;
-            Expression newTerm;
-            if(term.first() instanceof Product) {
-                termCoefficient = ((Product)term.first()).getCoefficient();
-                newTerm = Product.parseProduct(BigRational.ONE, ((Product)term.first()).getTerms());
-            } else {
-                termCoefficient = BigRational.ONE;
-                ArrayList<Expression> termFactor = new ArrayList<>();
-                termFactor.add(term.first());
-                newTerm = Product.parseProduct(termFactor, new ArrayList<>());
-            }
-            BigRational newTermCoefficient = terms.get(newTerm);
-            if(newTermCoefficient == null) newTermCoefficient = BigRational.ZERO;
-            if(term.second() == 1) newTermCoefficient = (BigRational)newTermCoefficient.add(termCoefficient);
-            else newTermCoefficient = (BigRational)newTermCoefficient.subtract(termCoefficient);
-            if(newTermCoefficient.equals(BigRational.ZERO)) terms.remove(newTerm);
-            else terms.put(newTerm, newTermCoefficient);
+            termCoefficient = BigRational.ONE;
+            ArrayList<Expression> termFactor = new ArrayList<>();
+            termFactor.add(term.first());
+            newTerm = Product.parseProduct(termFactor, new ArrayList<>());
         }
+
+        BigRational newTermCoefficient = terms.get(newTerm);
+        if(newTermCoefficient == null) newTermCoefficient = BigRational.ZERO;
+        if(term.second() >= 0) newTermCoefficient = (BigRational)newTermCoefficient.add(termCoefficient);
+        else newTermCoefficient = (BigRational)newTermCoefficient.subtract(termCoefficient);
+
+        if(newTermCoefficient.equals(BigRational.ZERO)) terms.remove(newTerm);
+        else terms.put(newTerm, newTermCoefficient);
     }
 
     /**
-     * Adds the specified term to this Sum Object. This is a private helper method to construct
-     * Sum objects. This term must not represent a {@code BigRational}.
+     * Adds the specified term to this Sum Object. This is a private helper method to
+     * construct Sum objects.
      *
-     * @param term The term to add.
+     * @param term  The term to add.
      */
     private void addTerm(Map.Entry<Expression, BigRational> term) {
-        if(term.getKey() instanceof BigRational) throw new RuntimeException("Sum: Cannot add constant as a term");
-        terms.putIfAbsent(term.getKey(), BigRational.ZERO);
-        terms.replace(term.getKey(), (BigRational)terms.get(term.getKey()).add(term.getValue()));
+        BigRational newCoefficient = terms.get(term.getKey());
+        if(newCoefficient == null) newCoefficient = BigRational.ZERO;
+        newCoefficient = (BigRational)newCoefficient.add(term.getValue());
+
+        if(newCoefficient.equals(BigRational.ZERO)) terms.remove(term.getKey());
+        else terms.put(term.getKey(), newCoefficient);
+    }
+
+    /**
+     * Gets the rational constant term of this Sum.
+     *
+     * @return The rational constant term.
+     */
+    public BigRational getRationalConstant() {
+        Expression lastTerm = terms.lastKey();
+        if(lastTerm instanceof BigRational) return terms.lastEntry().getValue();
+        else return BigRational.ZERO;
     }
 }
 

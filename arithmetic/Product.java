@@ -10,14 +10,27 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import algebra.Variable;
+import utility.Pair;
 
 /**
- * <p>An object representing a product or division of expressions.</p>
+ * <p>An object representing a product or division of two or more expressions.</p>
  *
- * <p>Internally, each factor is stored as if it was a Power. A factor that
- * is not a Power has an exponent of {@code BigRational.ONE} and a factor
- * with a negative exponent indicates division. Any factors who are numbers
- * are stored as part of the coefficient.</p>
+ * <p>Internally, the factors are stored in a TreeMap, where each expression is
+ * mapped to its coefficient (an Expression object). Essentially, each term is stored as if it
+ * was a Power. Notice that the exponent can be any Expression, which is different from a Sum.
+ * A factor that is not a Power has an implied exponent of {@code BigRational.ONE}
+ * A factor with a negative exponent indicates division.</p>
+ *
+ * <p>Any terms that are constant rational numbers are combined and stored as part of the
+ * rational term. For instance, {@code -4/3} and {@code 5} is part of the rational term while
+ * {@code 5^0.5} is not. Internally, the key is the product/quotient of all such terms and is
+ * mapped to {@code BigRational.ONE}. There is only one such key with type {@code BigRational}
+ * and is always the first key in the TreeMap so it can be easily accessed.
+ * If the rational term does not exist, there is no such mapping and the reference will
+ * point to {@code null}.</p>
+ *
+ * <p>An empty product will be interpreted as {@code BigRational.ONE}
+ * and thus will return this value instead of a Product object.</p>
  *
  * @author Ricky Qin
  */
@@ -31,8 +44,8 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
      *
      * @param factors   The factors.
      * @param divisors  The divisors.
-     * @return          A Product object if there is more than one non-rational term. Otherwise, a
-     * BigRational is returned.
+     * @return          A Product object if there is more than one term. Otherwise, the singular
+     * term is returned.
      */
     public static Expression parseProduct(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
         Product product = new Product(factors, divisors);
@@ -47,8 +60,8 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
      *
      * @param factors   The factor.
      * @param divisors  The divisor.
-     * @return          A Product object if there is more than one non-rational term. Otherwise, a
-     * BigRational is returned.
+     * @return          A Product object if there is more than one term. Otherwise, the singular
+     * term is returned.
      */
     public static Expression parseProduct(Expression factor, Expression divisor) {
         ArrayList<Expression> factors = new ArrayList<>();
@@ -62,16 +75,16 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
     /**
-     * Attempts to form a Product object with the provided coefficient and terms. Since
+     * Attempts to form a Product object with the provided terms. Since
      * the references to {@code terms} are not stored internally, they can be mutated
      * without affecting this object instance.
      *
-     * @param coefficient  The coefficient.
-     * @return             A Product object if there is more than one non-rational term.
-     * Otherwise, a BigRational is returned.
+     * @param terms  The terms of this product.
+     * @return       A Product object if there is more than one term. Otherwise, the singular
+     * term is returned.
      */
-    public static Expression parseProduct(BigRational coefficient, SortedMap<Expression, Expression> terms) {
-        Product product = new Product(coefficient, terms);
+    public static Expression parseProduct(TreeMap<Expression, Expression> terms) {
+        Product product = new Product(terms);
         Expression simplerForm = checkForSimplerForms(product);
         if(simplerForm == null) return product;
         else return simplerForm;
@@ -83,29 +96,22 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
      * @return         The simpler object if it can be expressed as such. Otherwise, {@code null} is returned.
      */
     private static Expression checkForSimplerForms(Product product) {
-        if(product.coefficient.equals(BigRational.ZERO)) return BigRational.ZERO;
-        if(product.terms.size() == 0) return product.coefficient;
-        if(product.terms.size() == 1 && product.coefficient.equals(BigRational.ONE)) {
-            return product.terms.firstEntry().getKey().pow(product.terms.firstEntry().getValue());
+        if(product.terms.size() == 0) return BigRational.ONE;// empty product
+        if(product.terms.size() == 1) {
+            return product.terms.firstKey().pow(product.terms.firstEntry().getValue());
         }
-        if(product.terms.size() == 1 && product.terms.firstEntry().getKey() instanceof Product &&
-            product.terms.firstEntry().getValue().equals(BigRational.ONE))
-            return new Product((BigRational)product.coefficient.multiply(((Product)product.terms.firstEntry().getKey()).coefficient),
-                ((Product)product.terms.firstEntry().getKey()).terms);
+        if(product.getCoefficient().equals(BigRational.ZERO)) return BigRational.ZERO;
+
         return null;
     }
 
 // <------------------------------ Instance Variables ------------------------------>
 
     /**
-     * The coefficient of this Product, a rational number, initialized to {@code BigRational.ONE}.
-     */
-    private BigRational coefficient = BigRational.ONE;
-
-    /**
      * A {@code TreeMap} of factors in this Product, where each factor is mapped to its exponent.
-     * The default exponent is {@code BigRational.ONE} and is never {@code BigRational.ZERO}.
-     * Note that rational numbers are not a part of this Map and is instead part of the coefficient.
+     * The implicit exponent is {@code BigRational.ONE} and is never {@code BigRational.ZERO}.
+     * There is only one BigRational factor (the coefficient) and is always the first entry in
+     * the map. For this entry, the coefficient is the key and the value is {@code BigRational.ONE}
      */
     private TreeMap<Expression, Expression> terms = new TreeMap<>(new ProductTermsComparator());
 
@@ -119,49 +125,28 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
      * @param divisors  The divisors.
      */
     private Product(ArrayList<Expression> factors, ArrayList<Expression> divisors) {
+        BigRational coefficient = BigRational.ONE;
+
         for(Expression factor: factors) {
             if(factor instanceof BigRational) {
                 coefficient = (BigRational)coefficient.multiply(factor);
-            } else {
-                Expression term;
-                Expression termExponent;
-                if(factor instanceof Power) term = ((Power)factor).getBase();
-                else term = factor;
-                termExponent = terms.get(term);
-                if(termExponent == null) termExponent = BigRational.ZERO;
-                if(factor instanceof Power) termExponent = termExponent.add(((Power)factor).getExponent());
-                else termExponent = termExponent.add(BigRational.ONE);
-                if(termExponent.equals(BigRational.ZERO)) terms.remove(term);
-                else terms.put(term, termExponent);
-            }
+            } else addTerm(new Pair<>(factor, 1));
         }
         for(Expression divisor: divisors) {
             if(divisor instanceof BigRational) {
                 coefficient = (BigRational)coefficient.divide(divisor);
-            } else {
-                Expression term;
-                Expression termExponent;
-                if(divisor instanceof Power) term = ((Power)divisor).getBase();
-                else term = divisor;
-                termExponent = terms.get(term);
-                if(termExponent == null) termExponent = BigRational.ZERO;
-                if(divisor instanceof Power) termExponent = termExponent.subtract(((Power)divisor).getExponent());
-                else termExponent = termExponent.subtract(BigRational.ONE);
-                if(termExponent.equals(BigRational.ZERO)) terms.remove(term);
-                else terms.put(term, termExponent);
-            }
+            } else addTerm(new Pair<>(divisor, -1));
         }
+        if(!coefficient.equals(BigRational.ONE)) this.terms.put(coefficient, BigRational.ONE);
     }
 
     /**
-     * Constructs a Product object with the provided coefficient and terms. Since the reference to
-     * {@code terms} is not stored internally, it can be mutated without affecting this object instance.
+     * Constructs a Product object with the provided terms. Since the reference to {@code terms}
+     * is not stored internally, it can be mutated without affecting this object instance.
      *
-     * @param coefficient  The coefficient.
-     * @param terms        The terms, where the keys are the factors and the values are the exponents.
+     * @param terms  The terms, where the keys are the terms and the values are its exponents.
      */
-    private Product(BigRational coefficient, SortedMap<Expression, Expression> terms) {
-        this.coefficient = coefficient;
+    private Product(TreeMap<Expression, Expression> terms) {
         this.terms = new TreeMap<>(terms);
     }
 
@@ -177,17 +162,17 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     public boolean equals(Object o) {
         if(o == this) return true;
         if(!(o instanceof Product)) return false;
-        return (coefficient.equals(((Product)o).coefficient) && terms.equals(((Product)o).terms));
+        return terms.equals(((Product)o).terms);
     }
 
     /**
-     * Returns the hash code for this Product.
+     * Returns the hash code for this Product, equal to the hashcode of its terms.
      *
      * @return  The hash code for this Product.
      */
     @Override
     public int hashCode() {
-        return coefficient.hashCode() ^ terms.hashCode();
+        return terms.hashCode();
     }
 
 
@@ -199,21 +184,20 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         StringBuilder str = new StringBuilder();
 
         // print coefficient
-        if(terms.size() == 0) str.append(coefficient.toString());
-        else {
-            if(coefficient.equals(BigRational.ONE));
-            else if(coefficient.equals(BigRational.NEGATIVE_ONE)) str.append('-');
-            else str.append(coefficient.toString());
-        }
+        BigRational coefficient = getCoefficient();
+        if(coefficient.equals(BigRational.ONE));
+        else if(coefficient.equals(BigRational.NEGATIVE_ONE)) str.append('-');
+        else str.append(coefficient);
 
         // print terms
         for(Map.Entry<Expression, Expression> term: terms.entrySet()) {
-            String termStr = new Power(term.getKey(), term.getValue()).toString();
-            if((term.getKey() instanceof Sum || term.getKey() instanceof Product) &&
-                term.getValue().equals(BigRational.ONE) &&
-                (!coefficient.equals(BigRational.ONE) || terms.size() > 1)) termStr = surroundInBrackets(termStr);
-            if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
-                Character.isDigit(termStr.charAt(0))) str.append('*');
+            if(term.getKey().equals(coefficient)) continue;
+
+            String termStr = Power.toPowerString(term.getKey(), term.getValue());
+            if(term.getKey() instanceof Sum && term.getValue().equals(BigRational.ONE))
+                termStr = surroundInBrackets(termStr);
+            if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) && termStr.length() > 0
+                && Character.isDigit(termStr.charAt(0))) str.append('*');
             str.append(termStr);
         }
 
@@ -242,52 +226,46 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     @Override
     public String toLatexString() {
         StringBuilder str = new StringBuilder();
-        if(terms.size() == 0) return coefficient.toLatexString();
 
-        ArrayList<Power> top = new ArrayList<>();
-        ArrayList<Power> bottom = new ArrayList<>();
+        ArrayList<String> top = new ArrayList<>();
+        ArrayList<String> bottom = new ArrayList<>();
+
+        BigRational coefficientNum = getCoefficient().getNumerator().abs();
+        BigRational coefficientDen = getCoefficient().getDenominator();
+        if(!coefficientNum.equals(BigRational.ONE)) top.add(coefficientNum.toLatexString());
+        if(!coefficientDen.equals(BigRational.ONE)) bottom.add(coefficientDen.toLatexString());
+
         for(Map.Entry<Expression, Expression> term: terms.entrySet()) {
+            if(term.getKey().equals(getCoefficient())) continue;
+
             boolean putOnTop = true;
             if(term.getValue() instanceof BigRational &&
                 ((BigRational)term.getValue()).signum() == -1) putOnTop = false;
             if(term.getValue() instanceof Product &&
-                ((Product)term.getValue()).coefficient.signum() == -1) putOnTop = false;
-            if(putOnTop) top.add(new Power(term.getKey(), term.getValue()));
-            else bottom.add(new Power(term.getKey(), term.getValue().negate()));
+                ((Product)term.getValue()).getCoefficient().signum() == -1) putOnTop = false;
+            String termStr = "";
+            if(putOnTop) termStr = Power.toPowerLatexString(term.getKey(), term.getValue());
+            else termStr = Power.toPowerLatexString(term.getKey(), term.getValue().negate());
+            if(term.getKey() instanceof Sum && term.getValue().equals(BigRational.ONE))
+                termStr = surroundInBracketsLatex(termStr);
+            if(putOnTop) top.add(termStr);
+            else bottom.add(termStr);
         }
+        if(top.size() == 0) top.add(BigRational.ONE.toLatexString());
 
-        BigRational coefficientTop = coefficient.getNumerator().abs();
-        BigRational coefficientBottom = coefficient.getDenominator();
-        boolean printCoefficientTop = !coefficientTop.equals(BigRational.ONE);
-        boolean printCoefficientBottom = !coefficientBottom.equals(BigRational.ONE);
-        int topItems = top.size() + (printCoefficientTop ? 1 : 0);
-        int bottomItems = bottom.size() + (printCoefficientBottom ? 1 : 0);
+        if(getCoefficient().signum() == -1) str.append('-');
+        if(bottom.size() > 0) str.append("\\dfrac{");
 
-        if(coefficient.signum() == -1) str.append('-');
-        if(bottomItems > 0) str.append("\\dfrac{");
-        if(printCoefficientTop) str.append(coefficientTop.toLatexString());
-        else if(top.size() == 0) str.append(BigRational.ONE.toLatexString());
-
-        for(Power term: top) {
-            String termStr = term.toLatexString();
-            if((term.getBase() instanceof Sum || term.getBase() instanceof Product) &&
-                (printCoefficientTop || topItems > 1 || coefficient.signum() == -1) &&
-                term.getExponent().equals(BigRational.ONE)) termStr = surroundInBracketsLatex(termStr);
-            if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
-                Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
+        for(String termStr: top) {
+            if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) && termStr.length() > 0
+                && Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
             str.append(termStr);
         }
-
-        if(bottomItems > 0) {
+        if(bottom.size() > 0) {
             str.append("}{");
-            if(!coefficient.isInteger()) str.append(coefficient.getDenominator().toLatexString());
-            for(Power term: bottom) {
-                String termStr = term.toLatexString();
-                if((term.getBase() instanceof Sum || term.getBase() instanceof Product) &&
-                    term.getExponent().equals(BigRational.ONE) &&
-                    (printCoefficientBottom || bottomItems > 1)) termStr = surroundInBracketsLatex(termStr);
-                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) &&
-                    Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
+            for(String termStr: bottom) {
+                if(str.length() > 0 && Character.isDigit(str.charAt(str.length()-1)) && termStr.length() > 0
+                && Character.isDigit(termStr.charAt(0))) str.append("\\cdot");
                 str.append(termStr);
             }
             str.append('}');
@@ -302,8 +280,6 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     public String toFunctionString() {
         StringBuilder str = new StringBuilder();
         str.append("Product(");
-        str.append(coefficient.toFunctionString());
-        str.append(", ");
         Iterator<Map.Entry<Expression, Expression>> it = iterator();
         while(it.hasNext()) {
             Map.Entry<Expression, Expression> term = it.next();
@@ -349,21 +325,53 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 // <---------------------------------- Own Methods ---------------------------------->
 
     /**
+     * Adds the specified term to this Product Object. This is a private helper method to
+     * construct Product objects.
+     *
+     * @param term  The term to add. The first value of the Pair is the term and the second
+     * value indicates whether the term is multiplied or divided if it is non-negative or negative.
+     */
+    private void addTerm(Pair<Expression, Integer> term) {
+        Expression termBase;
+        if(term.first() instanceof Power) termBase = ((Power)term.first()).getBase();
+        else termBase = term.first();
+
+        Expression termExponent = terms.get(termBase);
+        if(termExponent == null) termExponent = BigRational.ZERO;
+
+        if(term.first() instanceof Power) {
+            if(term.second() >= 0) termExponent = termExponent.add(((Power)term.first()).getExponent());
+            else termExponent = termExponent.subtract(((Power)term.first()).getExponent());
+        } else {
+            if(term.second() >= 0) termExponent = termExponent.add(BigRational.ONE);
+            else termExponent = termExponent.subtract(BigRational.ONE);
+        }
+
+        if(termExponent.equals(BigRational.ZERO)) terms.remove(termBase);
+        else terms.put(termBase, termExponent);
+
+        // TODO add restriction if its division!
+    }
+
+    /**
      * Gets the coefficient of this Product.
      *
      * @return The coefficient.
      */
     public BigRational getCoefficient() {
-        return coefficient;
+        Expression firstTerm = terms.firstKey();
+        if(firstTerm instanceof BigRational) return (BigRational)firstTerm;
+        else return BigRational.ONE;
     }
 
     /**
      * Gets the terms of this Product.
      *
-     * @return A read-only copy of the terms.
+     * @return A copy of the terms.
      */
-    public SortedMap<Expression, Expression> getTerms() {
-        return Collections.unmodifiableSortedMap(terms);
+    public TreeMap<Expression, Expression> getTerms() {
+        TreeMap<Expression, Expression> newMap = (TreeMap<Expression, Expression>)terms.clone();
+        return newMap;
     }
 }
 

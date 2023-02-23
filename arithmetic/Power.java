@@ -43,71 +43,19 @@ class Power extends Expression {
         return new Power(base, exponent);
     }
 
-// <------------------------------ Instance Variables ------------------------------>
-
     /**
-     * The base of this Power.
-     */
-    private Expression base;
-
-    /**
-     * The exponent of this Power.
-     */
-    private Expression exponent;
-
-// <--------------------------------- Constructors --------------------------------->
-
-    /**
-     * Constructs a Power object with the provided base and exponent.
-     * This constructor is package private and is made this way because some Power objects
-     * need to be made by bypassing validations.
+     * Returns the String representation of a Power with the specified base and exponent.
      *
-     * @param base      The base.
-     * @param exponent  The exponent.
+     * @param base      The base of the Power.
+     * @param exponent  The exponent of the Power.
+     * @return          The normal String representation of the Power.
      */
-    Power(Expression base, Expression exponent) {
-        this.base = base;
-        this.exponent = exponent;
-    }
-
-// <-------------------- Methods Overriden from java.lang.Object -------------------->
-
-    /**
-     * Compares this Power with the specified object for equality.
-     *
-     * @param o  The object to which this Power is to be compared.
-     * @return   True if the object is a Power and whose base and exponent
-     * is equal to this Power.
-     */
-    @Override
-    public boolean equals(Object o) {
-        if(o == this) return true;
-        if(!(o instanceof Power)) return false;
-        return (base.equals(((Power)o).base) && exponent.equals(((Power)o).exponent));
-    }
-
-    /**
-     * Returns the hash code for this Power.
-     *
-     * @return The hash code for this Power, equal to {@code base ^ exponent}.
-     */
-    @Override
-    public int hashCode() {
-        return base.hashCode() ^ exponent.hashCode();
-    }
-
-
-    /**
-     * Returns a string representation of this Power object.
-     *
-     * @return A string
-     */
-    @Override
-    public String toString() {
+    public static String toPowerString(Expression base, Expression exponent) {
         StringBuilder str = new StringBuilder();
 
         // print the base
         boolean printBaseBrackets = true;
+        if(exponent.equals(BigRational.ONE)) printBaseBrackets = false;
         if(base instanceof BigRational) {
             if(((BigRational)base).signum() >= 0 && ((BigRational)base).isInteger()) printBaseBrackets = false;
         }
@@ -135,14 +83,19 @@ class Power extends Expression {
         return str.toString();
     }
 
-// <---------------------- Methods Overriden from super types ---------------------->
-
-    @Override
-    public String toLatexString() {
+    /**
+     * Returns the LaTeX String representation of a Power with the specified base and exponent.
+     *
+     * @param base      The base of the Power.
+     * @param exponent  The exponent of the Power.
+     * @return          The LaTeX String representation of the Power.
+     */
+    public static String toPowerLatexString(Expression base, Expression exponent) {
         StringBuilder str = new StringBuilder();
 
         // print the base
         boolean printBaseBrackets = true;
+        if(exponent.equals(BigRational.ONE)) printBaseBrackets = false;
         if(base instanceof BigRational) {
             if(((BigRational)base).signum() >= 0 && ((BigRational)base).isInteger()) printBaseBrackets = false;
         }
@@ -159,6 +112,82 @@ class Power extends Expression {
             str.append(surroundInCurlyBrackets(exponent.toLatexString()));
         }
         return str.toString();
+    }
+
+// <------------------------------ Instance Variables ------------------------------>
+
+    /**
+     * The base of this Power.
+     */
+    private Expression base;
+
+    /**
+     * The exponent of this Power.
+     */
+    private Expression exponent;
+
+// <--------------------------------- Constructors --------------------------------->
+
+    /**
+     * Constructs a Power object with the provided base and exponent.
+     * This constructor is package private and is made this way because some Power objects
+     * need to be made by bypassing validations.
+     *
+     * @param base      The base.
+     * @param exponent  The exponent.
+     */
+    private Power(Expression base, Expression exponent) {
+        this.base = base;
+        this.exponent = exponent;
+    }
+
+// <-------------------- Methods Overriden from java.lang.Object -------------------->
+
+    /**
+     * Compares this Power with the specified object for equality.
+     *
+     * @param o  The object to which this Power is to be compared.
+     * @return   True if the object is a Power and whose base and exponent
+     * is equal to this Power.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if(o == this) return true;
+        if(!(o instanceof Power)) return false;
+        return (base.equals(((Power)o).base) && exponent.equals(((Power)o).exponent));
+    }
+
+    /**
+     * Returns the hash code for this Power.
+     *
+     * @return  The hash code for this Power, equal to {@code base ^ exponent}.
+     */
+    @Override
+    public int hashCode() {
+        return base.hashCode() ^ exponent.hashCode();
+    }
+
+
+    /**
+     * Returns a string representation of this Power object.
+     *
+     * @return  The normal String representation of this Power.
+     */
+    @Override
+    public String toString() {
+        return toPowerString(base, exponent);
+    }
+
+// <---------------------- Methods Overriden from super types ---------------------->
+
+    /**
+     * Returns a LaTeX string representation of this Power object.
+     *
+     * @return  The LaTeX String representation of this Power.
+     */
+    @Override
+    public String toLatexString() {
+        return toPowerLatexString(base, exponent);
     }
 
     @Override

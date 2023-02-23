@@ -142,8 +142,8 @@ public class BigRational extends BigNumber {
     /**
      * Compares this BigRational with the specified object for equality.
      *
-     * @param o The object to which this BigInteger is to be compared.
-     * @return  True if the object is a BigRational and whose value is numerically
+     * @param o  The object to which this BigInteger is to be compared.
+     * @return   True if the object is a BigRational and whose value is numerically
      * equal to this BigRational.
      */
     @Override
@@ -197,9 +197,9 @@ public class BigRational extends BigNumber {
     /**
      * Returns a BigRational whose value is {@code (this / val)}.
      *
-     * @param expression The value by which this BigRational is to be divided.
-     * @return           {@code this / val}
-     * @throws           ArithmeticException if {@code val} is zero.
+     * @param expression  The value by which this BigRational is to be divided.
+     * @return            {@code this / val}
+     * @throws            ArithmeticException if {@code val} is zero.
      */
     @Override
     public Expression divide(Expression expression) {
@@ -212,8 +212,8 @@ public class BigRational extends BigNumber {
     /**
      * Returns a BigRational whose value is {@code (this * val)}.
      *
-     * @param expression The value to be multiplied by this BigRational.
-     * @return           {@code this * val}
+     * @param expression  The value to be multiplied by this BigRational.
+     * @return            {@code this * val}
      */
     @Override
     public Expression multiply(Expression expression) {
@@ -226,7 +226,7 @@ public class BigRational extends BigNumber {
     /**
      * Returns a BigRational whose value is {@code (-this)}.
      *
-     * @return {@code -this}
+     * @return  {@code -this}
      */
     @Override
     public BigRational negate() {
@@ -236,7 +236,7 @@ public class BigRational extends BigNumber {
     /**
      * Returns a BigRational whose value is {@code (1 / this)}.
      *
-     * @return {@code 1 / this}
+     * @return  {@code 1 / this}
      */
     @Override
     public BigRational reciprocal() {
@@ -246,8 +246,8 @@ public class BigRational extends BigNumber {
     /**
      * Returns an Expression whose value is {@code (this - expression)}.
      *
-     * @param expression The expression to be subtracted from this BigRational.
-     * @return           {@code this - expression} An expression or a BigRational if
+     * @param expression  The expression to be subtracted from this BigRational.
+     * @return            {@code this - expression} An expression or a BigRational if
      * {@code expression} is a BigRational.
      */
     @Override
@@ -262,9 +262,9 @@ public class BigRational extends BigNumber {
     /**
      * Returns the LaTeX String representation of this BigRational.
      *
-     * @return A string. If this BigRational is negative, the sign will be displayed directly
-     * in front. If the BigRational is not an integer, it will be represented as a fraction
-     * using the {@code \dfrac} command.
+     * @return  A LaTeX string. If this BigRational is negative, the sign will be displayed
+     * directly in front. If the BigRational is not an integer, it will be represented as a
+     * fraction using the {@code \dfrac} command.
      */
     @Override
     public String toLatexString() {
@@ -317,7 +317,7 @@ public class BigRational extends BigNumber {
      * This is done so that all BigRationals representing the same value can be compared by just
      * checking the numerator and denominator instead of also having to reduce it to lowest terms.
      *
-     * @throws ArithmeticException if the denominator is {@code ZERO}.
+     * @throws  ArithmeticException if the denominator is {@code ZERO}.
      */
     private void normalize() {
         if(denominator.signum() == -1) {
@@ -333,7 +333,7 @@ public class BigRational extends BigNumber {
     /**
      * Gets the numerator of this BigRational.
      *
-     * @return The numerator.
+     * @return  The numerator.
      */
     public BigRational getNumerator() {
         return new BigRational(numerator);
@@ -342,7 +342,7 @@ public class BigRational extends BigNumber {
     /**
      * Gets the denominator of this BigRational.
      *
-     * @return The denominator.
+     * @return  The denominator.
      */
     public BigRational getDenominator() {
         return new BigRational(denominator);
@@ -352,7 +352,7 @@ public class BigRational extends BigNumber {
      * Returns a BigRational whose value is the absolute value of this
      * BigRational.
      *
-     * @return {@code abs(this)}
+     * @return  {@code abs(this)}
      */
     public BigRational abs() {
         return new BigRational(numerator.abs(), denominator);
@@ -361,7 +361,7 @@ public class BigRational extends BigNumber {
     /**
      * Determines whether or not this BigRational is an integer.
      *
-     * @return True if this BigRational is an integer.
+     * @return  True if this BigRational is an integer.
      */
     public boolean isInteger() {
         return denominator.equals(BigInteger.ONE);
@@ -370,7 +370,7 @@ public class BigRational extends BigNumber {
     /**
      * Determines whether or not this BigRational is a reciprocal of an integer.
      *
-     * @return True if this BigRational is a reciprocal of an integer.
+     * @return  True if this BigRational is a reciprocal of an integer.
      */
     public boolean isReciprocalInteger() {
         return numerator.abs().equals(BigInteger.ONE);
@@ -379,7 +379,7 @@ public class BigRational extends BigNumber {
     /**
      * Returns an int representing the sign of this BigRational:
      *
-     * @return {@code 1}, {@code 0}, or {@code -1} if this BigRational is positive, zero or negative.
+     * @return  {@code 1}, {@code 0}, or {@code -1} if this BigRational is positive, zero or negative.
      */
     public int signum() {
         return numerator.signum();
