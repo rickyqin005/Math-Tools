@@ -16,14 +16,51 @@ public abstract class Expression {
 
 // <------------------------------- Static Variables ------------------------------->
 
+    /**
+     * The code to represent a number literal token, indicating a number.
+     */
     final private static int NUMBER_LITERAL = 1;
+
+    /**
+     * The code to represent the round left bracket {@code (} token.
+     */
     final private static int OPEN_BRACKET = 2;
+
+    /**
+     * The code to represent the round right bracket {@code )} token.
+     */
     final private static int CLOSE_BRACKET = 3;
+
+    /**
+     * The code to represent the plus {@code +} token, indicating addition.
+     * or positivity.
+     */
     final private static int PLUS = 4;
+
+    /**
+     * The code to represent the minus {@code -} token, indicating subtraction.
+     * or negation.
+     */
     final private static int MINUS = 5;
+
+    /**
+     * The code to represent the multiply {@code *} token, indicating multiplication.
+     */
     final private static int MULTIPLY = 6;
+
+    /**
+     * The code to represent the {@code /} token, indicating division.
+     */
     final private static int DIVIDE = 7;
-    final private static int CARET = 8;// exponentiation
+
+    /**
+     * The code to represent the {@code ^} token, indicating exponentiation.
+     */
+    final private static int CARET = 8;
+
+    /**
+     * The code to represent a variable token, indicating the name of a variable.
+     */
     final private static int VARIABLE = 9;
 
 // <-------------------------------- Static Methods -------------------------------->
@@ -31,8 +68,8 @@ public abstract class Expression {
     /**
      * Splits a {@code String} representation of an Expression into tokens
      *
-     * @param str   The {@code String}
-     * @return      An {@code ArrayList} of tokens and its token type
+     * @param str  The {@code String}
+     * @return     An {@code ArrayList} of tokens and its token type
      */
     private static ArrayList<Pair<String, Integer>> tokenizeExpression(String str) {
         // Remove whitespace characters
@@ -160,9 +197,9 @@ public abstract class Expression {
     /**
      * Turns a list of tokens into an expression, following the order of operations.
      *
-     * @param tokens        The tokens to parse.
-     * @param beginIndex    The index of the first token to parse.
-     * @return              The parsed Expression.
+     * @param tokens      The tokens to parse.
+     * @param beginIndex  The index of the first token to parse.
+     * @return            The parsed Expression.
      */
     private static Expression internalParse(ArrayList<? extends Object> tokens, int beginIndex) {
 
@@ -281,10 +318,10 @@ public abstract class Expression {
     }
 
     /**
-     * Surrounds the provided {@code String} with a pair of round brackets.
+     * Surrounds the provided {@code String} with a pair of round {@code ()} brackets.
      *
-     * @param str   The provided {@code String}.
-     * @return      A {@code String} surrounded by a pair of round brackets.
+     * @param str  The provided {@code String}.
+     * @return     A new {@code String}.
      */
     final protected static String surroundInBrackets(String str) {
         return new StringBuilder("(").append(str).append(')').toString();
@@ -292,19 +329,20 @@ public abstract class Expression {
 
     /**
      * Surrounds the provided {@code String} with a pair of round brackets in a LaTex String.
+     * Specifically, it adds {@code \left(} to the beginning and {@code \right)} to the end.
      *
-     * @param str   The provided {@code String}.
-     * @return      A {@code String} surrounded by a pair of round brackets.
+     * @param str  The provided {@code String}.
+     * @return     A new {@code String}.
      */
-    final protected static String surroundInBracketsLatex(String str) {
+    final protected static String surroundInLatexBrackets(String str) {
         return new StringBuilder("\\left(").append(str).append("\\right)").toString();
     }
 
     /**
-     * Surrounds the provided {@code String} with a pair of curly brackets.
+     * Surrounds the provided {@code String} with a pair of curly <code>{}</code> brackets.
      *
-     * @param str   The provided {@code String}.
-     * @return      A {@code String}.
+     * @param str  The provided {@code String}.
+     * @return     A new {@code String}.
      */
     final protected static String surroundInCurlyBrackets(String str) {
         return new StringBuilder("{").append(str).append('}').toString();
@@ -313,9 +351,9 @@ public abstract class Expression {
     /**
      * Parses the {@code String} argument into a mathematical expression.
      *
-     * @param str   The {@code String} representation of the expression.
-     * @return      The resultant {@code Expression} object.
-     * @throws      NumberFormatException if the string is malformatted.
+     * @param str  The {@code String} representation of the expression.
+     * @return     The resultant {@code Expression} object.
+     * @throws     NumberFormatException if the string is malformatted.
      */
     public static Expression parse(String str) {
         ArrayList<Pair<String, Integer>> tokens = tokenizeExpression(str);
@@ -339,8 +377,8 @@ public abstract class Expression {
     /**
      * Compares this Expression with the specified object for equality.
      *
-     * @param o The object to which this Expression is to be compared.
-     * @return  True if the object is a Expression and whose value is numerically
+     * @param o  The object to which this Expression is to be compared.
+     * @return   True if the object is a Expression and whose value is numerically
      * equal to this Expression.
      */
     @Override
@@ -348,13 +386,17 @@ public abstract class Expression {
 
 
     /**
-     * @return int
+     * Returns the hash code for this Expression.
+     *
+     * @return  The hash code of this Expression.
      */
     @Override
     public abstract int hashCode();
 
     /**
-     * @return A {@code String} object representing the value of this Expression.
+     * Returns a string representation of this Expression.
+     *
+     * @return  The normal String representation of this Expression.
      */
     @Override
     public abstract String toString();
@@ -364,8 +406,8 @@ public abstract class Expression {
     /**
      * Returns an Expression whose value is {@code (this + expression)}.
      *
-     * @param  expression   The value to be added to this Expression.
-     * @return              {@code this + expression}
+     * @param  expression  The value to be added to this Expression.
+     * @return             {@code this + expression}
      */
     public Expression add(Expression expression) {
         ArrayList<Pair<Expression, Integer>> terms = new ArrayList<>();
@@ -379,7 +421,7 @@ public abstract class Expression {
      *
      * @param   expression The value by which this Expression is to be divided.
      * @return  {@code this / expression}
-     * @throws  ArithmeticException if {@code expression} simplifies to zero.
+     * @throws  ArithmeticException if {@code expression} obviously simplifies to zero.
      */
     public Expression divide(Expression expression) {
         return Product.parseProduct(this, expression);
@@ -388,8 +430,8 @@ public abstract class Expression {
     /**
      * Returns an Expression whose value is {@code (this * expression)}.
      *
-     * @param  expression The value to be multiplied by this Expression.
-     * @return {@code this * expression}
+     * @param   expression The value to be multiplied by this Expression.
+     * @return  {@code this * expression}
      */
     public Expression multiply(Expression expression) {
         ArrayList<Expression> factors = new ArrayList<>();
@@ -401,7 +443,7 @@ public abstract class Expression {
     /**
      * Returns a BigRational whose value is {@code (-this)}.
      *
-     * @return {@code -this}
+     * @return  {@code -this}
      */
     public Expression negate() {
         return multiply(BigRational.NEGATIVE_ONE);
@@ -420,7 +462,7 @@ public abstract class Expression {
     /**
      * Returns an Expression whose value is {@code (1 / this)}.
      *
-     * @return {@code 1 / this}
+     * @return  {@code 1 / this}
      */
     public Expression reciprocal() {
         return Product.parseProduct(BigRational.ONE, this);
@@ -443,22 +485,22 @@ public abstract class Expression {
     /**
      * Returns the LaTeX String representation of this Expression.
      *
-     * @return A string.
+     * @return  The LaTeX String representation of this Expression.
      */
     public abstract String toLatexString();
 
     /**
      * Returns the String representation of this Expression in function form.
      *
-     * @return A string.
+     * @return  The function String representation of this Expression.
      */
     public abstract String toFunctionString();
 
     /**
-     * Attempts to compute a numerical exact value for the current expression.
+     * Attempts to compute a numerical exact value for this Expression.
      *
-     * @return The result of evaluating the expression.
-     * @throws ArithmeticException If variables are present in the expression.
+     * @return  The result of evaluating this Expression.
+     * @throws  ArithmeticException If this Expression contains Variables.
      */
     public Expression evaluate() {
         return this.evaluate(new ArrayList<>());
@@ -467,9 +509,10 @@ public abstract class Expression {
     /**
      * Attempts to compute a numerical exact value for this Expression, given values of the variables.
      *
-     * @param variableValues The values to substitute into the variables.
-     * @return               The result of evaluating the expression.
-     * @throws               ArithmeticException If the value of a variable in the expression is not provided.
+     * @param variableValues  The values to substitute into the variables. If a Variable appears more than
+     * one, the value that appears first is taken.
+     * @return                The result of evaluating this expression.
+     * @throws                ArithmeticException If the value of a variable in this expression is missing.
      */
     public Expression evaluate(ArrayList<Pair<String, Expression>> variableValues) {
         HashMap<String, Expression> variables = new HashMap<>();
@@ -480,18 +523,18 @@ public abstract class Expression {
     }
 
     /**
-     * Attempts to compute a numerical exact value for the current expression, given values of the variables.
+     * Attempts to compute a numerical exact value for this Expression, given the values to substitute.
      *
-     * @param variableValues The values to substitute into the variables.
-     * @return               The result of evaluating the expression.
-     * @throws               ArithmeticException If the value of a variable in the expression is not provided.
+     * @param variableValues  The values to substitute into the variables.
+     * @return                The result of evaluating this Expression.
+     * @throws                ArithmeticException If the value of a variable in this Expression is missing.
      */
     protected abstract Expression internalEvaluate(HashMap<String, Expression> variableValues);
 
     /**
      * Attempts to reduce the complexity of this Expression by manipulating it algebraically.
      *
-     * @return A simplified expression that is equivalent to this Expression.
+     * @return  A simplified Expression that is equivalent to this Expression.
      */
     public abstract Expression simplify();
 }

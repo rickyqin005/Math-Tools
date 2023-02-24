@@ -32,7 +32,7 @@ import utility.Pair;
  *
  * @author Ricky Qin
  */
-class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRational>> {
+public class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRational>> {
 
 // <-------------------------------- Static Methods -------------------------------->
 
@@ -64,6 +64,54 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
             return sum.terms.firstEntry().getKey().multiply(sum.terms.firstEntry().getValue());
         }
         return null;
+    }
+
+    /**
+     * <p>A comparator that compares Expressions to determine their ordering in
+     * a Product object.</p>
+     *
+     * <p>Variable objects are ordered by their {@code compareTo} method.</p>
+     *
+     * <p>Otherwise, two Expressions of the same type are ordered by insertion order.</p>
+     */
+    public static class SumTermsComparator implements Comparator<Expression> {
+
+        /**
+         * Compares its two arguments for order. Returns a negative integer, zero, or a positive
+         * integer as the first argument is less than, equal to, or greater than the second.
+         *
+         * @param o1  The first expression.
+         * @param o2  The second expression.
+         * @return    A negative integer, zero, or a positive integer as the first argument is
+         * less than, equal to, or greater than the second.
+         */
+        @Override
+        public int compare(Expression o1, Expression o2) {
+            if(typeNum(o1) == typeNum(o2)) {
+                if(o1 instanceof Variable) return ((Variable)o1).compareTo((Variable)o2);
+                if(o1.equals(o2)) return 0;
+                return 1;
+            }
+            return Integer.compare(typeNum(o1), typeNum(o2));
+        }
+
+        /**
+         * Checks the type of the argument and assigns a non-negative integer. A smaller value
+         * indicates that the provided argument would come before an Expression with
+         * a larger value.
+         *
+         * @param expression  The argument whose type will be checked.
+         * @return            A non-negative integer.
+         */
+        private int typeNum(Expression expression) {
+            if(expression instanceof Power) return 1;
+            if(expression instanceof Product) return 2;
+            if(expression instanceof Variable) return 3;
+            if(expression instanceof Sum) return 4;
+            if(expression instanceof BigRational) return 5;
+            if(expression == null) return 6;
+            return 0;
+        }
     }
 
 // <------------------------------ Instance Variables ------------------------------>
@@ -126,7 +174,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     }
 
     /**
-     * @return String
+     * Returns a string representation of this Sum.
+     *
+     * @return  The normal String representation of this Sum.
      */
     @Override
     public String toString() {
@@ -140,7 +190,7 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
             if(term.getKey().equals(BigRational.ONE)) {
                 str.append(term.getValue().toString());
-                break;// always last entry
+                break;// always the last entry
             }
 
             // coefficients of one are implicit and should not be displayed
@@ -169,18 +219,20 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
      * Each item in the iterator is a {@code Map.Entry} where the key is
      * the term and the value is the coefficient of that term.
      *
-     * @return  The iterator
+     * @return  An iterator over the terms in this Sum.
      */
     @Override
     public Iterator<Map.Entry<Expression, BigRational>> iterator() {
         return terms.entrySet().iterator();
     }
 
-// <---------------------- Methods Overriden from super types ---------------------->
+// <---------------------- Methods Overriden from Superclasses ---------------------->
 
     /**
-     * @param expression
-     * @return Expression
+     * Returns a Sum whose value is {@code (this + expression)}.
+     *
+     * @param  expression  The value to be added to this Sum.
+     * @return             {@code this + expression}
      */
     @Override
     public Expression add(Expression expression) {
@@ -199,7 +251,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     }
 
     /**
-     * @return String
+     * Returns the LaTeX String representation of this Sum.
+     *
+     * @return  The LaTeX String representation of this Sum.
      */
     @Override
     public String toLatexString() {
@@ -213,7 +267,7 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
             if(term.getKey().equals(BigRational.ONE)) {
                 str.append(term.getValue().toLatexString());
-                break;// always last entry
+                break;// always the last entry
             }
 
             // coefficients of one are implicit and should not be displayed
@@ -223,7 +277,7 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
 
             // print term itself
             if(term.getKey() instanceof BigRational);
-            else if(term.getKey() instanceof Sum) str.append(surroundInBracketsLatex(term.getKey().toLatexString()));
+            else if(term.getKey() instanceof Sum) str.append(surroundInLatexBrackets(term.getKey().toLatexString()));
             else {
                 String termStr = term.getKey().toLatexString();
                 // add \cdot if coefficient and term needs to be separated
@@ -236,7 +290,10 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     }
 
     /**
-     * @return String
+     * Returns the String representation of this Sum in function form.
+     *
+     * @return  The function String representation of this Sum in the format
+     * <code>Sum({term:coefficient}, ...)</code>.
      */
     @Override
     public String toFunctionString() {
@@ -257,8 +314,11 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     }
 
     /**
-     * @param variableValues
-     * @return Expression
+     * Attempts to compute a numerical exact value for this Sum, given the values to substitute.
+     *
+     * @param variableValues  The values to substitute into the variables.
+     * @return                The result of evaluating this Sum.
+     * @throws                ArithmeticException If the value of a variable in this Sum is missing.
      */
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
@@ -267,7 +327,9 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     }
 
     /**
-     * @return Expression
+     * Attempts to reduce the complexity of this Sum by manipulating it algebraically.
+     *
+     * @return  A simplified Sum that is equivalent to this Sum.
      */
     @Override
     public Expression simplify() {
@@ -329,42 +391,12 @@ class Sum extends Expression implements Iterable<Map.Entry<Expression, BigRation
     /**
      * Gets the rational constant term of this Sum.
      *
-     * @return The rational constant term.
+     * @return  The rational constant term.
      */
     public BigRational getRationalConstant() {
         Expression lastTerm = terms.lastKey();
         if(lastTerm instanceof BigRational) return terms.lastEntry().getValue();
         else return BigRational.ZERO;
     }
-}
 
-/**
- * <p>A comparator that compares Expressions to determine their ordering in
- * a Product object.</p>
- *
- * <p>Variable objects are ordered by their {@code compareTo} method.</p>
- * <p>Otherwise, two Expressions of the same type are ordered by insertion order.</p>
- *
- * @author Ricky Qin
- */
-class SumTermsComparator implements Comparator<Expression> {
-
-    @Override
-    public int compare(Expression o1, Expression o2) {
-        if(typeNum(o1) == typeNum(o2)) {
-            if(o1 instanceof Variable) return ((Variable)o1).compareTo((Variable)o2);
-            if(o1.equals(o2)) return 0;
-            return 1;
-        }
-        return Integer.compare(typeNum(o1), typeNum(o2));
-    }
-
-    private int typeNum(Expression expression) {
-        if(expression instanceof Power) return 1;
-        if(expression instanceof Product) return 2;
-        if(expression instanceof Variable) return 3;
-        if(expression instanceof Sum) return 4;
-        if(expression instanceof BigRational) return 5;
-        return 0;
-    }
 }

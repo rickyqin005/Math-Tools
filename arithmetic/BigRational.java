@@ -1,7 +1,6 @@
 package arithmetic;
 
 import java.math.BigInteger;
-import java.util.HashMap;
 
 /**
  * <p>Immutable rational numbers represented in the form {@code P / Q}, where
@@ -176,7 +175,7 @@ public class BigRational extends BigNumber {
         return numerator.toString() + "/" + denominator.toString();
     }
 
-// <---------------------- Methods Overriden from super types ---------------------->
+// <---------------------- Methods Overriden from Superclasses ---------------------->
 
     /**
      * Returns an Expression whose value is {@code (this + expression)}.
@@ -262,9 +261,9 @@ public class BigRational extends BigNumber {
     /**
      * Returns the LaTeX String representation of this BigRational.
      *
-     * @return  A LaTeX string. If this BigRational is negative, the sign will be displayed
-     * directly in front. If the BigRational is not an integer, it will be represented as a
-     * fraction using the {@code \dfrac} command.
+     * @return  The LaTeX String representation of this BigRational. If this BigRational is
+     * negative, the sign will be displayed directly in front. If the BigRational is not an
+     * integer, it will be represented as a fraction using the {@code \dfrac} command.
      */
     @Override
     public String toLatexString() {
@@ -278,34 +277,6 @@ public class BigRational extends BigNumber {
         str.append(denominator.toString());
         str.append('}');
         return str.toString();
-    }
-
-
-    /**
-     * @return String
-     */
-    @Override
-    public String toFunctionString() {
-        return "\"" + toString() + "\"";
-    }
-
-
-    /**
-     * @param variableValues
-     * @return Expression
-     */
-    @Override
-    protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
-        return this;
-    }
-
-
-    /**
-     * @return Expression
-     */
-    @Override
-    public Expression simplify() {
-        return this;// already in lowest terms
     }
 
 // <---------------------------------- Own Methods ---------------------------------->

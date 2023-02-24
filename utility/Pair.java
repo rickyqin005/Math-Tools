@@ -46,7 +46,7 @@ public class Pair<A, B> {
     /**
      * Returns the hash code for this Pair.
      *
-     * @return  The hash code for this Pair.
+     * @return  The hash code for this Pair, equal to {@code 10007*first + second}.
      */
     @Override
     public int hashCode() {
@@ -56,7 +56,7 @@ public class Pair<A, B> {
     /**
      * Returns a {@code String} object representing the value of this Pair.
      *
-     * @return  A string in the format {{@code first, second}}
+     * @return  A string in the format <code>{first, second}</code>.
      */
     @Override
     public String toString() {

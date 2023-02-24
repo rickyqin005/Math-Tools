@@ -12,7 +12,7 @@ import algebra.Variable;
  *
  * @author Ricky Qin
  */
-class Power extends Expression {
+public class Power extends Expression {
 
 // <-------------------------------- Static Methods -------------------------------->
 
@@ -105,7 +105,7 @@ class Power extends Expression {
         if(!(exponent instanceof BigRational) || !exponent.equals(BigRational.ONE)) printExponent = true;
         if(!printExponent) printBaseBrackets = false;
 
-        if(printBaseBrackets) str.append(surroundInBracketsLatex(base.toLatexString()));
+        if(printBaseBrackets) str.append(surroundInLatexBrackets(base.toLatexString()));
         else str.append(base.toLatexString());
         if(printExponent) {
             str.append('^');
@@ -160,16 +160,16 @@ class Power extends Expression {
     /**
      * Returns the hash code for this Power.
      *
-     * @return  The hash code for this Power, equal to {@code base ^ exponent}.
+     * @return  The hash code of this Power, equal to {@code 10007*base + exponent}.
      */
     @Override
     public int hashCode() {
-        return base.hashCode() ^ exponent.hashCode();
+        return 10007*base.hashCode() + exponent.hashCode();
     }
 
 
     /**
-     * Returns a string representation of this Power object.
+     * Returns a string representation of this Power.
      *
      * @return  The normal String representation of this Power.
      */
@@ -178,10 +178,10 @@ class Power extends Expression {
         return toPowerString(base, exponent);
     }
 
-// <---------------------- Methods Overriden from super types ---------------------->
+// <---------------------- Methods Overriden from Superclasses ---------------------->
 
     /**
-     * Returns a LaTeX string representation of this Power object.
+     * Returns a LaTeX string representation of this Power.
      *
      * @return  The LaTeX String representation of this Power.
      */
@@ -190,6 +190,12 @@ class Power extends Expression {
         return toPowerLatexString(base, exponent);
     }
 
+    /**
+     * Returns the String representation of this Power in function form.
+     *
+     * @return  The function String representation of this Power, formatted as
+     * {@code Power(base, exponent)}.
+     */
     @Override
     public String toFunctionString() {
         StringBuilder str = new StringBuilder();
@@ -201,12 +207,24 @@ class Power extends Expression {
         return str.toString();
     }
 
+    /**
+     * Attempts to compute a numerical exact value for this Power, given the values to substitute.
+     *
+     * @param variableValues  The values to substitute into the variables.
+     * @return                The result of evaluating this Power.
+     * @throws                ArithmeticException If the value of a variable in this Power is missing.
+     */
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * Attempts to reduce the complexity of this Power by manipulating it algebraically.
+     *
+     * @return  A simplified Power that is equivalent to this Power.
+     */
     @Override
     public Expression simplify() {
         Expression newBase = base.simplify();
@@ -234,7 +252,8 @@ class Power extends Expression {
 
     /**
      * Gets the base of this Power.
-     * @return The base.
+     *
+     * @return  The base.
      */
     public Expression getBase() {
         return base;
@@ -242,7 +261,8 @@ class Power extends Expression {
 
     /**
      * Gets the exponent of this Power.
-     * @return The exponent.
+     *
+     * @return  The exponent.
      */
     public Expression getExponent() {
         return exponent;

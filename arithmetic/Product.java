@@ -1,12 +1,10 @@
 package arithmetic;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import algebra.Variable;
@@ -34,7 +32,7 @@ import utility.Pair;
  *
  * @author Ricky Qin
  */
-class Product extends Expression implements Iterable<Map.Entry<Expression, Expression>> {
+public class Product extends Expression implements Iterable<Map.Entry<Expression, Expression>> {
 
 // <-------------------------------- Static Methods -------------------------------->
 
@@ -58,9 +56,9 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
      * Attempts to form a Product object with the provided terms. Since the references to the lists
      * are not stored internally, they can be mutated without affecting this object instance.
      *
-     * @param factors   The factor.
-     * @param divisors  The divisor.
-     * @return          A Product object if there is more than one term. Otherwise, the singular
+     * @param factor   The factor.
+     * @param divisor  The divisor.
+     * @return         A Product object if there is more than one term. Otherwise, the singular
      * term is returned.
      */
     public static Expression parseProduct(Expression factor, Expression divisor) {
@@ -103,6 +101,54 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
         if(product.getCoefficient().equals(BigRational.ZERO)) return BigRational.ZERO;
 
         return null;
+    }
+
+    /**
+     * <p>A comparator that compares Expressions to determine their ordering in
+     * a Product object.</p>
+     *
+     * <p>Variable objects are ordered by their {@code compareTo} method.</p>
+     *
+     * <p>Otherwise, two Expressions of the same type are ordered by insertion order.</p>
+     */
+    public static class ProductTermsComparator implements Comparator<Expression> {
+
+        /**
+         * Compares its two arguments for order. Returns a negative integer, zero, or a positive
+         * integer as the first argument is less than, equal to, or greater than the second.
+         *
+         * @param o1  The first expression.
+         * @param o2  The second expression.
+         * @return    A negative integer, zero, or a positive integer as the first argument is
+         * less than, equal to, or greater than the second.
+         */
+        @Override
+        public int compare(Expression o1, Expression o2) {
+            if(typeNum(o1) == typeNum(o2)) {
+                if(o1 instanceof Variable) return ((Variable)o1).compareTo((Variable)o2);
+                if(o1.equals(o2)) return 0;
+                return 1;
+            }
+            return Integer.compare(typeNum(o1), typeNum(o2));
+        }
+
+        /**
+         * Checks the type of the argument and assigns a non-negative integer. A smaller value
+         * indicates that the provided argument would come before an Expression with
+         * a larger value.
+         *
+         * @param expression  The argument whose type will be checked.
+         * @return            A non-negative integer.
+         */
+        private int typeNum(Expression expression) {
+            if(expression instanceof BigRational) return 0;
+            if(expression instanceof Variable) return 1;
+            if(expression instanceof Product) return 2;
+            if(expression instanceof Power) return 3;
+            if(expression instanceof Sum) return 4;
+            if(expression == null) return 6;
+            return 5;
+        }
     }
 
 // <------------------------------ Instance Variables ------------------------------>
@@ -177,7 +223,9 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
 
     /**
-     * @return String
+     * Returns a string representation of this Product.
+     *
+     * @return  The normal String representation of this Product.
      */
     @Override
     public String toString() {
@@ -209,19 +257,26 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     /**
      * Returns an iterator over the terms of this Product.
      * Each item in the iterator is an {@code Map.Entry} where the key is
-     * the factor and the value is the exponent.
+     * the factor and the value is its exponent. The
      *
-     * @return The iterator
+     * @return An iterator over the terms in this Product.
      */
     @Override
     public Iterator<Map.Entry<Expression, Expression>> iterator() {
         return terms.entrySet().iterator();
     }
 
-// <---------------------- Methods Overriden from super types ---------------------->
+// <---------------------- Methods Overriden from Superclasses ---------------------->
 
     /**
-     * @return String
+     * Returns the LaTeX String representation of this Product.
+     *
+     * @return  The LaTeX String representation of this Product. If there any terms with negative
+     * exponents, the string representation will be in the form of a fraction and those terms will
+     * be placed at the bottom of the fraction. If the coefficient is negative, the sign will be placed
+     * right before the beginning of the fraction (if in fraction form). If the coefficient is not an
+     * integer, it will be split with its numerator and denominator on the top and bottom halves of
+     * the fraction respectively. If in fraction form, the {@code \dfrac} command will be used.
      */
     @Override
     public String toLatexString() {
@@ -229,11 +284,19 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
 
         ArrayList<String> top = new ArrayList<>();
         ArrayList<String> bottom = new ArrayList<>();
+        int numItemsTop = 0;
+        int numItemsBottom = 0;
 
         BigRational coefficientNum = getCoefficient().getNumerator().abs();
         BigRational coefficientDen = getCoefficient().getDenominator();
-        if(!coefficientNum.equals(BigRational.ONE)) top.add(coefficientNum.toLatexString());
-        if(!coefficientDen.equals(BigRational.ONE)) bottom.add(coefficientDen.toLatexString());
+        if(!coefficientNum.equals(BigRational.ONE)) {
+            top.add(coefficientNum.toLatexString());
+            numItemsTop++;
+        }
+        if(!coefficientDen.equals(BigRational.ONE)) {
+            bottom.add(coefficientDen.toLatexString());
+            numItemsBottom++;
+        }
 
         for(Map.Entry<Expression, Expression> term: terms.entrySet()) {
             if(term.getKey().equals(getCoefficient())) continue;
@@ -243,11 +306,25 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
                 ((BigRational)term.getValue()).signum() == -1) putOnTop = false;
             if(term.getValue() instanceof Product &&
                 ((Product)term.getValue()).getCoefficient().signum() == -1) putOnTop = false;
+
+            if(putOnTop) numItemsTop++;
+            else numItemsBottom++;
+        }
+
+        for(Map.Entry<Expression, Expression> term: terms.entrySet()) {
+            if(term.getKey().equals(getCoefficient())) continue;
+
+            boolean putOnTop = true;
+            if(term.getValue() instanceof BigRational &&
+                ((BigRational)term.getValue()).signum() == -1) putOnTop = false;
+            if(term.getValue() instanceof Product &&
+                ((Product)term.getValue()).getCoefficient().signum() == -1) putOnTop = false;
+
             String termStr = "";
             if(putOnTop) termStr = Power.toPowerLatexString(term.getKey(), term.getValue());
             else termStr = Power.toPowerLatexString(term.getKey(), term.getValue().negate());
-            if(term.getKey() instanceof Sum && term.getValue().equals(BigRational.ONE))
-                termStr = surroundInBracketsLatex(termStr);
+            if(term.getKey() instanceof Sum && (putOnTop ? numItemsTop : numItemsBottom) > 1)
+                termStr = surroundInLatexBrackets(termStr);
             if(putOnTop) top.add(termStr);
             else bottom.add(termStr);
         }
@@ -274,7 +351,10 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
     /**
-     * @return String
+     * Returns the String representation of this Product in function form.
+     *
+     * @return  The function String representation of this Product in the format
+     * <code>Product({term:exponent}, ...)</code>.
      */
     @Override
     public String toFunctionString() {
@@ -295,8 +375,11 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
     /**
-     * @param variableValues
-     * @return Expression
+     * Attempts to compute a numerical exact value for this Product, given the values to substitute.
+     *
+     * @param variableValues  The values to substitute into the variables.
+     * @return                The result of evaluating this Product.
+     * @throws                ArithmeticException If the value of a variable in this Product is missing.
      */
     @Override
     protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
@@ -305,7 +388,9 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     }
 
     /**
-     * @return Expression
+     * Attempts to reduce the complexity of this Product by manipulating it algebraically.
+     *
+     * @return  A simplified Product that is equivalent to this Product.
      */
     @Override
     public Expression simplify() {
@@ -356,7 +441,7 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     /**
      * Gets the coefficient of this Product.
      *
-     * @return The coefficient.
+     * @return  The coefficient.
      */
     public BigRational getCoefficient() {
         Expression firstTerm = terms.firstKey();
@@ -367,41 +452,11 @@ class Product extends Expression implements Iterable<Map.Entry<Expression, Expre
     /**
      * Gets the terms of this Product.
      *
-     * @return A copy of the terms.
+     * @return  A copy of the terms.
      */
     public TreeMap<Expression, Expression> getTerms() {
         TreeMap<Expression, Expression> newMap = (TreeMap<Expression, Expression>)terms.clone();
         return newMap;
     }
-}
 
-/**
- * <p>A comparator that compares Expressions to determine their ordering in
- * a Product object.</p>
- *
- * <p>Variable objects are ordered by their {@code compareTo} method.</p>
- * <p>Otherwise, two Expressions of the same type are ordered by insertion order.</p>
- *
- * @author Ricky Qin
- */
-class ProductTermsComparator implements Comparator<Expression> {
-
-    @Override
-    public int compare(Expression o1, Expression o2) {
-        if(typeNum(o1) == typeNum(o2)) {
-            if(o1 instanceof Variable) return ((Variable)o1).compareTo((Variable)o2);
-            if(o1.equals(o2)) return 0;
-            return 1;
-        }
-        return Integer.compare(typeNum(o1), typeNum(o2));
-    }
-
-    private int typeNum(Expression expression) {
-        if(expression instanceof BigRational) return 0;
-        if(expression instanceof Variable) return 1;
-        if(expression instanceof Product) return 2;
-        if(expression instanceof Power) return 3;
-        if(expression instanceof Sum) return 4;
-        return 5;
-    }
 }

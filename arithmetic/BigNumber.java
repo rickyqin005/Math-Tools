@@ -3,11 +3,13 @@ package arithmetic;
 import java.util.HashMap;
 
 /**
- * The base class for all objects that represent numerical values.
+ * <p>The base class for all objects that represent numerical values.</p>
  *
  * @author  Ricky Qin
  */
 public abstract class BigNumber extends Expression {
+
+// <------------------------------- Static Variables ------------------------------->
 
     /**
      * The mathematical constant {@code e}, aka {@code Euler's number}.
@@ -15,11 +17,12 @@ public abstract class BigNumber extends Expression {
     final public static BigNumber E = new BigNumber() {
 
         private int hash = 0x5d37ae33;
+
         private String name = "e";
 
-        // only instantiated once, so all references are equal
         @Override
         public boolean equals(Object o) {
+            // only instantiated once, so all references are equal
             return (this == o);
         }
 
@@ -38,21 +41,7 @@ public abstract class BigNumber extends Expression {
             return name;
         }
 
-        @Override
-        public String toFunctionString() {
-
-            return "\"" + name + "\"";
-        }
-
-        @Override
-        protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
-            return this;
-        }
-
-        @Override
-        public Expression simplify() {
-            return this;
-        }};
+    };
 
     /**
      * The mathematical constant {@code pi}, the ratio of the circumference
@@ -84,21 +73,7 @@ public abstract class BigNumber extends Expression {
             return "\\" + name;
         }
 
-        @Override
-        public String toFunctionString() {
-
-            return "\"" + name + "\"";
-        }
-
-        @Override
-        protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
-            return this;
-        }
-
-        @Override
-        public Expression simplify() {
-            return this;
-        }};
+    };
 
     /**
      * A mathematical expression representing positive infinity.
@@ -109,4 +84,38 @@ public abstract class BigNumber extends Expression {
      * A mathematical expression representing positive infinity.
      */
     // final public static BigNumber NEGATIVE_INFINITY = new BigNumber() {};
+
+// <---------------------- Methods Overriden from Superclasses ---------------------->
+
+    /**
+     * Returns the String representation of this BigNumber in function form.
+     *
+     * @return  The function String representation of this BigNumber, formatted the same
+     * as the {@code toString()} method but with quotation marks {@code ""} surrounding it.
+     */
+    @Override
+    public String toFunctionString() {
+        return "\"" + toString() + "\"";
+    }
+
+    /**
+     * Attempts to compute a numerical exact value for this BigNumber, given the values to substitute.
+     *
+     * @param variableValues  The values to substitute into the variables.
+     * @return                Itself, since it's already a number!
+     */
+    @Override
+    protected Expression internalEvaluate(HashMap<String, Expression> variableValues) {
+        return this;
+    }
+
+    /**
+     * Attempts to reduce the complexity of this BigNumber by manipulating it algebraically.
+     *
+     * @return  Itself, since its already simplified!
+     */
+    @Override
+    public Expression simplify() {
+        return this;
+    };
 }
